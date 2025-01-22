@@ -224,7 +224,7 @@ fields:
 """
 
 class FFCA:
-    def __init__(self, r, c):
+    def __init__(self, r, c, no_agents):
         # to be determined further
         self.alpha = 0.3
         self.delta = 0.1
@@ -232,7 +232,7 @@ class FFCA:
         self.kd = 2.0
 
         self.structure = Grid(to_corridor(r, c))
-        self.structure = self.init_agents(8)
+        self.structure = self.init_agents(no_agents)
 
         # field 1 is defined as 'to the right'
         # field 2 is defined as 'to the left'
@@ -240,8 +240,9 @@ class FFCA:
         self.static_field_1 = None
         self.static_field_2 = None
         self.init_static_fields()
-        # print(self.static_field_1.grid)
-        # print(self.static_field_2.grid)
+
+        print('static field 1', self.static_field_1)
+        print('static field 2', self.static_field_2)
 
         # hard part
         self.dynamic_field = None
@@ -268,8 +269,8 @@ class FFCA:
 
     def init_static_fields(self):
         R, C = self.structure.Rmax, self.structure.Cmax
-        self.static_field_1 = Grid([[r for r in range(R, 0, -1)] for _ in range(C)])
-        self.static_field_2 = Grid([[r for r in range(1, R + 1)] for _ in range(C)])
+        self.static_field_1 = Grid([[-r for r in range(C, 0, -1)] for _ in range(R)])
+        self.static_field_2 = Grid([[-r for r in range(1, C + 1)] for _ in range(R)])
 
     def init_dynamic_field(self):
         R, C = self.structure.Rmax, self.structure.Cmax
@@ -299,6 +300,7 @@ class FFCA:
 
     def step(self):
         pss = {}
+        new_positions = {}
         for pos, val in self.structure.items():
             ps = [[0 for _ in range(3)] for _ in range(3)]
 
@@ -306,44 +308,59 @@ class FFCA:
             if val not in [AGENT_1, AGENT_2]:
                 continue
 
-            # loops over all neighbours (moore neighbourhood)
+            # loops over all neighbors (Moore neighborhood)
             for dr in range(-1, 2):
                 for dc in range(-1, 2):
-                    nb = Pos(pos.r + dr, pos.c + dc)
+                    nb = pos + Pos(dr, dc)
 
-                    # only considers agents, therefore we don't need the ksi
+                    # Skip invalid cells (non-movable positions)
                     if self.structure[nb] in [AGENT_1, AGENT_2, OBSTACLE, EXIT]:
                         continue
 
-                    # ternary for static field determination
-                    # print(self.static_field_1.grid)
-                    # print(self.static_field_2.grid)
+                    # Determine the static field to use based on the agent type
                     sf = self.static_field_1 if val == AGENT_1 else self.static_field_2
-                    field_pos = Pos(nb.r - 1, nb.c - 1)
-                    # paper formula
+                    field_pos = nb - Pos(1, 1)
+                    assert field_pos in sf
 
+                    # Calculate transition probability using the static and dynamic fields
                     p = np.exp(self.ks * sf[field_pos] + self.kd * self.dynamic_field[field_pos])
                     ps[dr + 1][dc + 1] = p
 
-                    # normalisation
-                    Z = sum([sum(row) for row in ps])
-                    ps = [[p / Z for p in row] for row in ps]
-                    # print(ps)
+            # Normalization factor
+            Z = sum(sum(row) for row in ps)
+
+            # Avoid division by zero if all probabilities are zero
+            if Z > 0:
+                ps = [[p / Z for p in row] for row in ps]
+            else:
+                ps = [[0 for _ in range(3)] for _ in range(3)]
+
+            # Store the normalized probabilities for this position
             pss[pos] = ps
+
+            # Check correctness of probabilities
+            assert abs(sum(sum(row) for row in ps) - 1) < 1e-6, "Probabilities do not sum to 1"
+
+            # decide the actual new position based on the probabiliies
+            new_pos = np.random.choice([pos + Pos(dr, dc) for dr in range(-1, 2) for dc in range(-1, 2)], p=[p for row in ps for p in row])
+            new_positions[pos] = new_pos
+            print(pos, new_pos)
 
         return pss
 
-    # fix
+
+    # quick and dirty show function to test the correctness of the program
     def show(self):
-        r_positions = [p.r for p in self.structure]
+        r_positions = [p.r for p in self.structure.keys()]
         rmin, rmax = min(r_positions), max(r_positions)
-        c_positions = [p.c for p in self.structure]
+        c_positions = [p.c for p in self.structure.keys()]
         cmin, cmax = min(c_positions), max(c_positions)
+
         for r in range(rmin, rmax + 1):
             for c in range(cmin, cmax + 1):
                 pos = Pos(r, c)
                 val = self.structure[pos]
-                char = MAP_TO_STRING[val]
+                char = MAP_TO_STRING.get(val, '?')
                 print(char, end='')
             print()
         print()
@@ -363,14 +380,14 @@ def to_corridor(R, C):
 
 
 def test_to_corridor():
-    c = to_corridor(5, 5)
+    c = to_corridor(10, 100)
     print(c)
 
-test_to_corridor()
+# test_to_corridor()
 
-ffca = FFCA(5, 5)
-# ffca.show()
-# ffca.step()
+ffca = FFCA(5, 10, 1)
+ffca.show()
+ffca.step()
 
 # for pos, value in ffca.structure.grid.items():
 #     print(pos, value)
