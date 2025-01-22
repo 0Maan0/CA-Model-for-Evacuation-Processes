@@ -90,6 +90,7 @@ class Pos:
                 return Pos(*other)
         return other
 
+# constants
 OBSTACLE = 1000
 EXIT = 0
 """
@@ -151,7 +152,7 @@ class Grid:
                         new_val = 1
                     else:
                         new_val = 1.5
-                        
+
                     stack.append((nb, new_val))
                     visited.add(nb)
 
@@ -221,3 +222,39 @@ class Grid:
         for key in keys_to_remove:
             del self.grid[key]
         return self
+
+"""
+Structure of the FFCA,
+fields:
+- initialise 2d structure corridor
+- static field agent 1
+- static field agent 2
+- dynamic field both agents
+- step function
+"""
+
+class FFCA:
+    def __init__(self, r, c, obstacles: List[Pos], exits: List[Pos], agents: List[Pos]):
+        self.static_field_1 = None
+        self.static_field_2 = None
+        self.dynamic_field = None
+        self.structure = None
+
+        grid = Grid(r, c, obstacles, exits)
+        for r in grid.Rmax:
+            in_row = []
+            for c in grid.Cmax:
+                p = Pos(r, c)
+                if grid[p] == AGENT_1:
+                    in_row.append(AGENT_1)
+
+
+
+    def init_static_field(self, type):
+        pass
+
+    def init_dynamic_field(self):
+        pass
+
+    def step(self):
+        pass
