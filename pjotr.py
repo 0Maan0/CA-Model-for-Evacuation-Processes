@@ -9,6 +9,7 @@ and updates the grid accordingly.
 
 from typing import Dict, List, Set, Iterable, Union
 from collections import defaultdict
+import numpy as np
 
 
 class Pos:
@@ -93,73 +94,57 @@ class Pos:
 # constants
 OBSTACLE = 1000
 EXIT = 0
+AGENT_1 = 1
+AGENT_2 = 2
+EMPTY = 3
+
+MAP = {
+    '#': OBSTACLE,
+    'E': EXIT,
+    '1': AGENT_1,
+    '2': AGENT_2,
+    '.': EMPTY,
+}
+
+
+ex = """
+########
+.      .
+.      .
+########
+"""
+
+
 """
 Implements a grid class for the CA, standard value for obstacles is 1000, and
 standard value for exits is 0. Standard value for unset cells is inf."""
 class Grid:
-    def __init__(self, r, c, obstacles: List[Pos], exits: List[Pos]) -> None:
-        self.grid = defaultdict(lambda: float('inf'))
+    def __init__(self, struct) -> None:
+
+        # to change the structure of the string to a 2d array for size knowledge
+        if isinstance(struct, str):
+            struct = [list(row) for row in struct.split('\n')]
+
+        r = len(struct)
+        c = len(struct[0])
         self.Rmin = 0
-        self.Rmax = r - 1
+        self.Rmax = r - 2
         self.Cmin = 0
-        self.Cmax = c - 1
+        self.Cmax = c - 2
 
-        for pos in obstacles:
-            self.grid[pos] = OBSTACLE
-        for pos in exits:
-            self.grid[pos] = 0
+        self.grid = defaultdict(lambda: float('inf'))
 
-        # also add a standard border of obstacles
-        for i in range(r):
-            self.grid[Pos(i, 0)] = OBSTACLE
-            self.grid[Pos(i, c + 2)] = OBSTACLE
-        for i in range(c + 2):
-            self.grid[Pos(0, i)] = OBSTACLE
-            self.grid[Pos(r + 2, i)] = OBSTACLE
+        # we do this for the corridor structure
+        if isinstance(struct[0][0], str):
+            for r, row in enumerate(struct):
+                for c, char in enumerate(row):
+                    self.grid[Pos(r, c)] = MAP[char]
 
-        # set all other positions to
-        for r in range(self.Rmin, self.Rmax + 1):
-            for c in range(self.Cmin, self.Cmax + 1):
-                pos = Pos(r, c)
-                if self.grid[pos] == OBSTACLE:
-                    continue
-                if self.grid[pos] == EXIT:
-                    continue
-                if self.grid[pos] == float('inf'):
-                    self.grid[pos] = float('inf')
-
-        # initialise by the following algorithm:
-        # 1. set all exits to 0
-        # 2. set all obstacles to inf
-        # 3. go from exits, and set every cell horizontal or vertical to the exit to 1
-        # 4. go from exits, and set every cell diagonal to the exit to 1.5
-        # do this for all exits, and check if the value is already set, if so, only update if lower
-        # and only update every position only once per exit
-        # repeat until all exits are done
-
-        for _exit in exits:
-            stack = [(_exit, 0)]
-            visited = set()
-            while stack:
-                pos, val = stack.pop()
-                visited.add(pos)
-                for nb, new_val in pos.nbs():
-                    if grid[nb] == OBSTACLE or nb not in grid or nb in visited:
-                        continue
-
-                    d = Pos.dist(_exit, nb)
-                    if d == 1:
-                        new_val = 1
-                    else:
-                        new_val = 1.5
-
-                    stack.append((nb, new_val))
-                    visited.add(nb)
-
-                    # update the grid with the new value
-                    if new_val < grid[nb]:
-                        grid[nb] = new_val
-
+        # this is for the field convertion
+        elif isinstance(struct[0][0], int):
+            for r, row in enumerate(struct):
+                for c, value in enumerate(row):
+                    self.grid[Pos(r, c)] = value
 
 
     def __getitem__(self, key: Pos) -> float:
@@ -206,14 +191,11 @@ class Grid:
         return result
 
     def show(self, positions: Set[Pos]=set()) -> None:
+        print(self.Rmax, self.Cmax)
         for r in range(self.Rmin, self.Rmax + 1):
             for c in range(self.Cmin, self.Cmax + 1):
-                p = Pos(r, c)
-                value = self.grid.get(p, float('inf'))
-                if value > 100:
-                    print('#', end='')
-                else:
-                    print('.', end='')
+                pos = Pos(r, c)
+                print(self.grid[pos], end='')
             print()
         print()
 
@@ -234,27 +216,141 @@ fields:
 """
 
 class FFCA:
-    def __init__(self, r, c, obstacles: List[Pos], exits: List[Pos], agents: List[Pos]):
+    def __init__(self, r, c):
+        # to be determined further
+        self.alpha = 0.3
+        self.delta = 0.1
+        self.ks = 2.5
+        self.kd = 2.0
+
+        self.structure = Grid(to_corridor(r, c))
+        self.structure = self.init_agents(8)
+
+        # field 1 is defined as 'to the right'
+        # field 2 is defined as 'to the left'
+        # fields go from high to low
         self.static_field_1 = None
         self.static_field_2 = None
+        self.init_static_fields()
+        # print(self.static_field_1.grid)
+        # print(self.static_field_2.grid)
+
+        # hard part
         self.dynamic_field = None
-        self.structure = None
+        self.dynamic_field = self.init_dynamic_field()
 
-        grid = Grid(r, c, obstacles, exits)
-        for r in grid.Rmax:
-            in_row = []
-            for c in grid.Cmax:
-                p = Pos(r, c)
-                if grid[p] == AGENT_1:
-                    in_row.append(AGENT_1)
+        # initialise the grid with agents
+        # make step function
+    """
+    for initialising the grid we want to convert (r, c) into a corridor.
+    First, create the docstring for this corridor, then convert that docstring
+    to the proper structure.
+    """
 
+    # changes inplace
+    # no_agents represents the amount of agents of type 1 and the amount of agents of type 2
+    def init_agents(self, no_agents):
+        assert 2 * no_agents < self.structure.Rmax * self.structure.Cmax, "Too many agents for the grid"
+        valid_positions = self.structure.findall(EMPTY)
+        pos = np.random.choice(valid_positions, 2*no_agents, replace=False)
+        for i in range(no_agents):
+            self.structure[pos[i]] = AGENT_1
+            self.structure[pos[i+no_agents]] = AGENT_2
+        return self.structure
 
-
-    def init_static_field(self, type):
-        pass
+    def init_static_fields(self):
+        R, C = self.structure.Rmax, self.structure.Cmax
+        self.static_field_1 = Grid([[r for r in range(R, 0, -1)] for _ in range(C)])
+        self.static_field_2 = Grid([[r for r in range(1, R + 1)] for _ in range(C)])
 
     def init_dynamic_field(self):
-        pass
+        R, C = self.structure.Rmax, self.structure.Cmax
+        # initialise zeros
+        dynamic_field = Grid([[0 for _ in range(C)] for _ in range(R)])
+        return dynamic_field
+
+    # moved_cells contains the list of ORIGINAL positions of the moved agents
+    # this way we leave behind a trace of the agents
+    def update_dynamic_field(self, moved_cells):
+        for p in moved_cells:
+            self.dynamic_field[p] += 1
+
+        new_dynamic_field = Grid([[0 for _ in range(self.structure.Cmax)] for _ in range(self.structure.Rmax)])
+
+        for pos in self.dynamic_field:
+            delta = 0
+            for nb in pos.nbs():
+                # absorbing boundary conditions (we skip if not in the grid)
+                if nb in self.dynamic_field:
+                    delta += self.dynamic_field[nb]
+            delta -= 4 * self.dynamic_field[pos]
+            delta = (1 - self.delta) * (self.dynamic_field[pos] + self.alpha / 4 * delta)
+            new_dynamic_field[pos] = delta
+
+        self.dynamic_field = new_dynamic_field
 
     def step(self):
-        pass
+        pss = {}
+        for pos, val in self.structure.items():
+            ps = [[0 for _ in range(3)] for _ in range(3)]
+
+            # only considers agents
+            if val not in [AGENT_1, AGENT_2]:
+                continue
+
+            # loops over all neighbours (moore neighbourhood)
+            for dr in range(-1, 2):
+                for dc in range(-1, 2):
+                    nb = Pos(pos.r + dr, pos.c + dc)
+
+                    # only considers agents, therefore we don't need the ksi
+                    if self.structure[nb] in [AGENT_1, AGENT_2, OBSTACLE, EXIT]:
+                        continue
+
+                    # ternary for static field determination
+                    # print(self.static_field_1.grid)
+                    # print(self.static_field_2.grid)
+                    sf = self.static_field_1 if val == AGENT_1 else self.static_field_2
+                    field_pos = Pos(nb.r - 1, nb.c - 1)
+                    # paper formula
+
+                    p = np.exp(self.ks * sf[field_pos] + self.kd * self.dynamic_field[field_pos])
+                    ps[dr + 1][dc + 1] = p
+
+                    # normalisation
+                    Z = sum([sum(row) for row in ps])
+                    ps = [[p / Z for p in row] for row in ps]
+                    # print(ps)
+            pss[pos] = ps
+
+        return pss
+
+    def show(self):
+        self.structure.show()
+
+def to_corridor(R, C):
+    s = '#' * (C + 2)
+    s += '\n'
+    for r in range(R):
+        s += 'E'
+        s += '.' * C
+        s += 'E'
+        s += '\n'
+
+    s += '#' * (C + 2)
+
+    return s
+
+
+def test_to_corridor():
+    c = to_corridor(5, 5)
+    print(c)
+
+test_to_corridor()
+
+ffca = FFCA(5, 5)
+ffca.step()
+
+
+# for pos, value in ffca.structure.grid.items():
+#     print(pos, value)
