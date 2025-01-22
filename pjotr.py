@@ -98,6 +98,14 @@ AGENT_1 = 1
 AGENT_2 = 2
 EMPTY = 3
 
+MAP_TO_STRING = {
+    OBSTACLE: '#',
+    EXIT: 'E',
+    AGENT_1: '1',
+    AGENT_2: '2',
+    EMPTY: '.',
+}
+
 MAP = {
     '#': OBSTACLE,
     'E': EXIT,
@@ -325,8 +333,20 @@ class FFCA:
 
         return pss
 
+    # fix
     def show(self):
-        self.structure.show()
+        r_positions = [p.r for p in self.structure]
+        rmin, rmax = min(r_positions), max(r_positions)
+        c_positions = [p.c for p in self.structure]
+        cmin, cmax = min(c_positions), max(c_positions)
+        for r in range(rmin, rmax + 1):
+            for c in range(cmin, cmax + 1):
+                pos = Pos(r, c)
+                val = self.structure[pos]
+                char = MAP_TO_STRING[val]
+                print(char, end='')
+            print()
+        print()
 
 def to_corridor(R, C):
     s = '#' * (C + 2)
@@ -349,8 +369,8 @@ def test_to_corridor():
 test_to_corridor()
 
 ffca = FFCA(5, 5)
-ffca.step()
-
+# ffca.show()
+# ffca.step()
 
 # for pos, value in ffca.structure.grid.items():
 #     print(pos, value)
