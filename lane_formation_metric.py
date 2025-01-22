@@ -9,10 +9,20 @@ def order_parameter(Ntot, N1, N2):
     N1: Number of particles in each row with direction 1 (Array)
     N2: Number of particles in each row with direction 2 (Array)
     '''
-    return (np.sum( ((N1 - N2)/(N1 + N2)) **2) ) / Ntot
+    filled_rows = 0
+    phi = 0
+    for row in range(len(N1)):
+        if N1[row] + N2[row] > 0:
+            phi += (((N1[row] - N2[row]))/ (N1[row] + N2[row])) **2
+            filled_rows += 1 
+    if Ntot == 0 or filled_rows == 0:
+        print("No particles in the system, order parameter is not defined.")
+        return np.nan
+    return phi/filled_rows
 
-Ntot = 250
-N1 = np.array([50, 50, 1, 1, 1])
-N2 = np.array([0, 0, 49, 49, 49])
-phi = order_parameter(Ntot, N1, N2)
-print(f"""Order parameter: {phi}""")
+if __name__ == "__main__":
+    Ntot = 50
+    N1 = np.array([0, 0])
+    N2 = np.array([0, 0])
+    phi_value = order_parameter(Ntot, N1, N2)
+    print(f"""Order parameter: {phi_value}""")
