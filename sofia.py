@@ -242,7 +242,7 @@ class FFCA:
         # spawn rate
         self.beta = 0.025
         # horizontal bias
-        self.horizontal_bias = 5000
+        self.horizontal_bias = 50
 
         # structure initialisation
         self.structure = Grid(to_corridor(r, c))
@@ -436,7 +436,7 @@ class FFCA:
         # extract moved agents
         moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
         self.update_dynamic_field(moved_cells)
-        # self.spawn_agents()
+        self.spawn_agents()
 
     # quick and dirty show function to test the correctness of the program
     def show(self):
@@ -497,3 +497,4 @@ for i in range(steps):
 
 # for pos, value in ffca.structure.grid.items():
 #     print(pos, value)
+
