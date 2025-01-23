@@ -10,6 +10,7 @@ and updates the grid accordingly.
 from typing import Dict, List, Set, Iterable, Union
 from collections import defaultdict
 import numpy as np
+import time
 
 
 class Pos:
@@ -173,6 +174,9 @@ class Grid:
     def __repr__(self) -> str:
         return f"Grid({self.grid})"
 
+    def __iter__(self):
+        return iter(self.grid)
+
     def keys(self):
         return self.grid.keys()
 
@@ -224,7 +228,7 @@ fields:
 """
 
 class FFCA:
-    def __init__(self, r, c, no_agents):
+    def __init__(self, r, c, no_agents, agents_list=None):
         # alpha is the strength of the dynamic field
         self.alpha = 0.3
         # delta is the decay rate of the dynamic field
@@ -232,14 +236,20 @@ class FFCA:
         # ks is the strength of the static field
         self.ks = 2.5
         # kd is the decay rate of the dynamic field
-        self.kd = 2.0
+        self.kd = 3.0
         # conflict resolution probability
         self.mu = 0.5
         # spawn rate
-        self.beta = 0.5
+        self.beta = 0.025
+        # horizontal bias
+        self.horizontal_bias = 5000
 
+        # structure initialisation
         self.structure = Grid(to_corridor(r, c))
         self.structure = self.init_agents(no_agents)
+        if agents_list:
+            for pos, agent in agents_list:
+                self.structure[pos] = agent
 
         # field 1 is defined as 'to the right'
         # field 2 is defined as 'to the left'
@@ -248,23 +258,10 @@ class FFCA:
         self.static_field_2 = None
         self.init_static_fields()
 
-        # print('static field 1', self.static_field_1)
-        # print('static field 2', self.static_field_2)
-
         # hard part
         self.dynamic_field = None
         self.dynamic_field = self.init_dynamic_field()
 
-
-        # initialise the grid with agents
-        # make step function
-    """
-    for initialising the grid we want to convert (r, c) into a corridor.
-    First, create the docstring for this corridor, then convert that docstring
-    to the proper structure.
-    """
-
-    # changes inplace
     # no_agents represents the amount of agents of type 1 and the amount of agents of type 2
     def init_agents(self, no_agents):
         assert 2 * no_agents < self.structure.Rmax * self.structure.Cmax, "Too many agents for the grid"
@@ -311,8 +308,19 @@ class FFCA:
 
                     # Calculate transition probability using the static and dynamic fields
                     p = np.exp(self.ks * sf[field_pos] + self.kd * self.dynamic_field[field_pos])
+
+                    horizontal_bias = 1
+
                     # mapping
-                    ps[dr + 1][dc + 1] = p
+                    if val == AGENT_1:
+                        forward = 1
+                    elif val == AGENT_2:
+                        forward = -1
+
+
+                    if dc == forward:
+                        horizontal_bias = self.horizontal_bias
+                    ps[dr + 1][dc + 1] = horizontal_bias * p
 
             # Normalization factor
             Z = sum(sum(row) for row in ps)
@@ -320,18 +328,21 @@ class FFCA:
             # Avoid division by zero if all probabilities are zero
             if Z > 0:
                 ps = [[p / Z for p in row] for row in ps]
+                assert abs(sum(sum(row) for row in ps) - 1) < 1e-6, "Probabilities do not sum to 1"
             else:
                 ps = [[0 for _ in range(3)] for _ in range(3)]
+            # print(ps)
 
             # Store the normalized probabilities for this position
             pss[pos] = ps
 
-            # Check correctness of probabilities
-            assert abs(sum(sum(row) for row in ps) - 1) < 1e-6, "Probabilities do not sum to 1"
 
-            # decide the actual new position based on the probabiliies
-            new_pos = np.random.choice([pos + Pos(dr, dc) for dr in range(-1, 2) for dc in range(-1, 2)], p=[p for row in ps for p in row])
-            positions_map[pos] = new_pos
+            # make distinction between agents that cannot move (surrounde by other agents)
+            if sum([sum([p for p in row]) for row in ps]) == 0:
+                new_pos = pos
+            else:
+                new_pos = np.random.choice([pos + Pos(dr, dc) for dr in range(-1, 2) for dc in range(-1, 2)], p=[p for row in ps for p in row])
+                positions_map[pos] = new_pos
 
             # solve conflicts
             new_positions = list(positions_map.values())
@@ -349,7 +360,10 @@ class FFCA:
                     # resolve conflict
                     else:
                         conflicted_positions = [old_pos for old_pos, new_pos in positions_map.items() if new_pos == new_position]
-                        winner = np.random.choice(conflicted_positions, 1)[0]
+                        if conflicted_positions:
+                            winner = np.random.choice(conflicted_positions, 1)[0]
+                        else:
+                            continue
 
                         # pick one agent to move to the conflicted new position
                         for old_pos in conflicted_positions:
@@ -357,35 +371,38 @@ class FFCA:
                                 positions_map[old_pos] = new_position
                             else:
                                 positions_map[old_pos] = old_pos
+
         # actually assign the new positions
         for old_pos, new_pos in positions_map.items():
-            self.structure[new_pos] = self.structure[old_pos]
-            self.structure[old_pos] = EMPTY
+            if old_pos == new_pos:
+                continue
+            if self.structure[new_pos] == EXIT:
+                self.structure[old_pos] = EMPTY
+            else:
+                self.structure[new_pos] = self.structure[old_pos]
+                self.structure[old_pos] = EMPTY
 
         return positions_map
 
     # handle the agent flow; remove agents on the exits and spawn agents with
     # probability beta on the corresponding entrances
     #TODO: can make entrance search more efficient
-    def handle_agent_flow(self):
-        exits = self.structure.findall(EXIT)
-        for pos in exits:
-            if self.structure[pos] == AGENT_1:
-                self.structure[pos] = EMPTY
-            elif self.structure[pos] == AGENT_2:
-                self.structure[pos] = EMPTY
-
-        # entranes for agent1 and spawning
+    def spawn_agents(self):
+        # entrances for agent1 and spawning move direction: --->
         entrances1 = self.static_field_2.findall(0)
-        for pos in entrances:
+        for pos in entrances1:
+            # map to structure position and move one step into the field
+            structure_pos = pos + Pos(1, 1)
             if np.random.random() < self.beta:
-                self.structure[pos] = AGENT_1
+                self.structure[structure_pos] = AGENT_1
 
-        # entrances for agent2 and spawning
+        # entrances for agent2 and spawning move direction: <---
         entrances2 = self.static_field_1.findall(0)
-        for pos in entrances:
+        for pos in entrances2:
+            # map to structure position and move one step into the field
+            structure_pos = pos + Pos(1, -1)
             if np.random.random() < self.beta:
-                self.structure[pos] = AGENT_2
+                self.structure[structure_pos] = AGENT_2
 
     def init_dynamic_field(self):
         R, C = self.structure.Rmax, self.structure.Cmax
@@ -397,13 +414,10 @@ class FFCA:
     # moved_cells contains the list of ORIGINAL positions of the moved agents
     # this way we leave behind a trace of the agents
     def update_dynamic_field(self, moved_cells):
-        print('update')
         for p in moved_cells:
             self.dynamic_field[p] += 1
 
         new_dynamic_field = Grid([[0 for _ in range(self.structure.Cmax + 2)] for _ in range(self.structure.Rmax)])
-        print(new_dynamic_field)
-        print(self.dynamic_field)
 
         for pos in self.dynamic_field:
             delta = 0
@@ -421,9 +435,8 @@ class FFCA:
         position_map = self.move_agents()
         # extract moved agents
         moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
-        print('moved cells', moved_cells)
         self.update_dynamic_field(moved_cells)
-        self.handle_agent_flow()
+        # self.spawn_agents()
 
     # quick and dirty show function to test the correctness of the program
     def show(self):
@@ -440,6 +453,14 @@ class FFCA:
                 print(char, end='')
             print()
         print()
+
+    # checks that the agents are only removed when they reach an exit
+    def validate_removal(self):
+        for pos, val in self.structure.items():
+            if val in [AGENT_1, AGENT_2]:
+                assert self.structure[pos + Pos(1, 0)] == EXIT, "Agent is not on an exit"
+        pass
+
 
 def to_corridor(R, C):
     s = '#' * (C + 2)
@@ -461,11 +482,16 @@ def test_to_corridor():
 
 # test_to_corridor()
 
-ffca = FFCA(2, 3, 1)
+# test agents
+# agents = [(Pos(1, 1), 1), (Pos(1, 5), 2)]
+
+
+ffca = FFCA(10, 100, 2)
 ffca.show()
-steps = 10
+steps = 1000
 for i in range(steps):
-    print(f"Step {i}")
+    time.sleep(0.05)
+    # print(f"Step {i}")
     ffca.step()
     ffca.show()
 
