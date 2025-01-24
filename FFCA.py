@@ -312,7 +312,7 @@ class FFCA:
         moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
 
         self.update_dynamic_field(moved_cells)
-        # self.spawn_agents()
+        self.spawn_agents()
 
     def show(self):
         """
@@ -341,6 +341,18 @@ class FFCA:
             if val in [AGENT_1, AGENT_2]:
                 assert self.structure[pos + Pos(1, 0)] == EXIT, "Agent is not on an exit"
         pass
+
+    def agents_in_row(self, structure):
+        agent_counts = defaultdict(lambda: {AGENT_1: 0, AGENT_2: 0})
+        for pos, val in structure.items():
+            if val in [AGENT_1, AGENT_2]:
+                agent_counts[pos.r][val] += 1
+        N1 = []
+        N2 = []
+        for row in sorted(agent_counts.keys()):
+            N1.append(agent_counts[row][AGENT_1])
+            N2.append(agent_counts[row][AGENT_2])
+        return N1, N2
 
 
 def string_to_ints(str):
