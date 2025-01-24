@@ -47,7 +47,20 @@ def test_small():
         ffca.show()
 
 
-#test1()
+test_small()
+
+
+def test_big():
+    ffca = FFCA(10, 100, 20, spawn_rate=0.06, conflict_resolution_rate=0,
+                dynamic_field_strength=10)
+    steps = 1000
+    ffca.show()
+    for i in range(steps):
+        ffca.step()
+        ffca.show()
+
+
+# test_big()
 
 
 def run():
@@ -76,5 +89,7 @@ def run():
     # save phi_values in csv file
     np.savetxt("phi_values.csv", phi_values, delimiter=",")
     plot_order_parameter(phi_values, steps)
-run()
+
+
+# run()
 
