@@ -242,7 +242,7 @@ class FFCA:
         # spawn rate
         self.beta = 0.05
         # horizontal bias
-        self.horizontal_bias = 5000
+        self.horizontal_bias = 1
 
         # structure initialisation
         self.structure = Grid(to_corridor(r, c))
@@ -592,7 +592,7 @@ def visualize_simulation(ffca: FFCA, steps: int, filename: str = 'simulation.gif
 
 # Call the visualization function
 ffca = FFCA(20, 100, 100)  # Adjust parameters as necessary
-visualize_simulation(ffca, 5000)  # Create GIF for 1000 steps
+visualize_simulation(ffca, 2000)  # Create GIF for 1000 steps
 
 
 
