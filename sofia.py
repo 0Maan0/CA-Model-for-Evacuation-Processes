@@ -595,9 +595,3 @@ ffca = FFCA(20, 100, 100)  # Adjust parameters as necessary
 visualize_simulation(ffca, 2000)  # Create GIF for 1000 steps
 
 
-
-
-
-
-
-
