@@ -242,7 +242,7 @@ class FFCA:
         # spawn rate
         self.beta = 0.025
         # horizontal bias
-        self.horizontal_bias = 5000
+        self.horizontal_bias = 50
 
         # structure initialisation
         self.structure = Grid(to_corridor(r, c))
@@ -436,7 +436,7 @@ class FFCA:
         # extract moved agents
         moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
         self.update_dynamic_field(moved_cells)
-        # self.spawn_agents()
+        self.spawn_agents()
 
     # quick and dirty show function to test the correctness of the program
     def show(self):
@@ -486,14 +486,119 @@ def test_to_corridor():
 # agents = [(Pos(1, 1), 1), (Pos(1, 5), 2)]
 
 
-ffca = FFCA(10, 100, 50)
-ffca.show()
-steps = 1000
-for i in range(steps):
-    time.sleep(0.05)
+#ffca = FFCA(10, 100, 50)
+#ffca.show()
+#steps = 1000
+#for i in range(steps):
+  #  time.sleep(0.05)
     # print(f"Step {i}")
-    ffca.step()
-    ffca.show()
+  #  ffca.step()
+  #  ffca.show()
 
 # for pos, value in ffca.structure.grid.items():
 #     print(pos, value)
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
+
+# Parameters for the grid and simulation
+grid_size = (20, 20)  # Grid dimensions
+num_agents = 30       # Number of agents
+num_steps = 50        # Number of steps in the simulation
+exit_position = (0, 10)  # Exit location
+
+# Initialize agent positions
+def initialize_agents(grid_size, num_agents):
+    agents = []
+    while len(agents) < num_agents:
+        x, y = np.random.randint(0, grid_size[0]), np.random.randint(0, grid_size[1])
+        if (x, y) not in agents and (x, y) != exit_position:
+            agents.append((x, y))
+    return agents
+
+# Move agents toward the exit
+def move_agents(agents, exit_position, grid_size):
+    new_agents = []
+    for x, y in agents:
+        dx = np.sign(exit_position[0] - x)
+        dy = np.sign(exit_position[1] - y)
+
+        # Randomize movement priority
+        if np.random.rand() > 0.5:
+            new_x, new_y = x + dx, y
+        else:
+            new_x, new_y = x, y + dy
+
+        # Ensure new positions are within bounds
+        new_x = max(0, min(grid_size[0] - 1, new_x))
+        new_y = max(0, min(grid_size[1] - 1, new_y))
+
+        # Add the new position if not already occupied
+        if (new_x, new_y) not in new_agents and (new_x, new_y) != exit_position:
+            new_agents.append((new_x, new_y))
+        else:
+            new_agents.append((x, y))
+
+    return new_agents
+
+import matplotlib.pyplot as plt
+import numpy as np
+import imageio
+
+def grid_to_image(grid: Grid) -> np.ndarray:
+    # Get the grid size
+    rows = grid.Rmax + 2
+    cols = grid.Cmax + 2
+    
+    # Create an empty image (matrix of zeros)
+    img = np.zeros((rows, cols, 3), dtype=np.uint8)  # RGB image
+    
+    # Define color mapping for agents and obstacles
+    color_map = {
+        OBSTACLE: [0, 0, 0],  # black for obstacles
+        EXIT: [0, 255, 0],  # red for exits
+        AGENT_1: [255, 0, 0],  # green for agent 1
+        AGENT_2: [0, 0, 255],  # blue for agent 2
+        EMPTY: [255, 255, 255],  # white for empty cells
+    }
+    
+    # Iterate through the grid and assign colors
+    for pos, value in grid.items():
+        row, col = pos.r, pos.c
+        img[row, col] = color_map.get(value, [255, 255, 255])  # default to white for unknown values
+    
+    return img
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.animation import FuncAnimation
+
+# Sample function to visualize the grid
+def visualize_ffca(ffca, steps, output_file="visualization.gif"):
+    fig, ax = plt.subplots(figsize=(30, 15))  # Increase the figsize for a larger GIF
+
+    def update(frame):
+        ax.clear()
+        ax.set_title(f"Step {frame}")
+        grid = np.zeros((ffca.structure.Rmax + 2, ffca.structure.Cmax + 2), dtype=int)
+        for pos, value in ffca.structure.items():
+            grid[pos.r, pos.c] = value
+
+        ax.imshow(grid, cmap="viridis", interpolation="nearest")
+        ffca.step()  # Step the FFCA forward
+
+    ani = FuncAnimation(fig, update, frames=steps, interval=50)
+    ani.save(output_file, writer="pillow", fps=10)
+
+# Usage
+ffca = FFCA(10, 100, 50)  # Adjust parameters as necessary
+visualize_ffca(ffca, steps=100, output_file="corridor_simulation.gif")
+
+
+from IPython.display import Image
+
+# Display the GIF (works in Jupyter notebooks)
+Image(filename='simulation.gif')
+
+
