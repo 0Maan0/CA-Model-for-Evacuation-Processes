@@ -2,6 +2,7 @@ from FFCA import FFCA
 from Grid import Grid, Pos
 import time
 
+
 def test_collision():
     # test agents
     agents = [(Pos(1, 1), 1), (Pos(1, 5), 2)]
@@ -46,5 +47,6 @@ def run():
         time.sleep(0.05)
         ffca.step()
         ffca.show()
+
 
 # run()
