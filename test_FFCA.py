@@ -1,3 +1,12 @@
+"""
+University      University of Amstedam
+Course:         Complex systems simulation
+Authors:        Pjotr Piet, Maan Scipio, Sofia Tete
+IDs:            12714933, 15899039, 15830608
+Description:    This file imports the FFCA class and runs some standard
+scenarios to see the visually see the FFCA interactions.
+"""
+
 from FFCA import FFCA
 from Grid import Grid, Pos
 import time

@@ -1,10 +1,14 @@
 """
-CA 2d grid which can be initialized with a lists of obstacles and a list of
-exits, given as 2d coords. I also want to be able to update the grid using
-similar lists of coords. Then i want the class to initialize the grid using
-by calculating the values for every cell. I want the grid to be a l[complex] -> int
-Lastly, I also want to make a step function, that moves all the agents in the grid
-and updates the grid accordingly.
+University      University of Amstedam
+Course:         Complex systems simulation
+Authors:        Pjotr Piet, Maan Scipio, Sofia Tete
+IDs:            12714933, 15899039, 15830608
+Description:    This file contains the implementation of the FFCA.
+The FFCA class represents the FFCA model. It contains two static fields of
+type Grid. One for agents of type 1 and one for agents of type 2. It also
+contains a dynamic field of type Grid. Then lastly, it also contains the
+structure of the grid. The FFCA has a step function that combines all the
+update functionality, to update the positions of the agents.
 """
 
 import numpy as np
