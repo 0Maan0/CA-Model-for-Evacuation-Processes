@@ -497,3 +497,4 @@ for i in range(steps):
 
 # for pos, value in ffca.structure.grid.items():
 #     print(pos, value)
+
