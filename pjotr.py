@@ -9,6 +9,7 @@ and updates the grid accordingly.
 
 from typing import Dict, List, Set, Iterable, Union
 from collections import defaultdict
+from lane_formation_metric import order_parameter, mean_order_parameter, plot_order_parameter
 import numpy as np
 import time
 
@@ -436,7 +437,7 @@ class FFCA:
         # extract moved agents
         moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
         self.update_dynamic_field(moved_cells)
-        # self.spawn_agents()
+        self.spawn_agents()
 
     # quick and dirty show function to test the correctness of the program
     def show(self):
@@ -460,6 +461,18 @@ class FFCA:
             if val in [AGENT_1, AGENT_2]:
                 assert self.structure[pos + Pos(1, 0)] == EXIT, "Agent is not on an exit"
         pass
+
+    def agents_in_row(self, structure):
+        agent_counts = defaultdict(lambda: {AGENT_1: 0, AGENT_2: 0})
+        for pos, val in structure.items():
+            if val in [AGENT_1, AGENT_2]:
+                agent_counts[pos.r][val] += 1
+        N1 = []
+        N2 = []
+        for row in sorted(agent_counts.keys()):
+            N1.append(agent_counts[row][AGENT_1])
+            N2.append(agent_counts[row][AGENT_2])
+        return N1, N2
 
 
 def to_corridor(R, C):
@@ -485,15 +498,28 @@ def test_to_corridor():
 # test agents
 # agents = [(Pos(1, 1), 1), (Pos(1, 5), 2)]
 
+Ntot = 50
+random_phi_values = []
+for _ in range(100):
+    ffca = FFCA(10, 100, Ntot)
+    N1, N2 = ffca.agents_in_row(ffca.structure)
+    random_phi_values.append(order_parameter(Ntot, N1, N2))
+phi_zero = np.mean(random_phi_values)
 
-ffca = FFCA(10, 100, 50)
-ffca.show()
-steps = 1000
+ffca = FFCA(10, 100, Ntot)
+steps = 100
+phi_values = np.zeros(steps)
 for i in range(steps):
     time.sleep(0.05)
     # print(f"Step {i}")
+    current_phi = order_parameter(Ntot, *ffca.agents_in_row(ffca.structure))
+    current_mean_phi = mean_order_parameter(current_phi, phi_zero)
+    phi_values[i] = current_mean_phi
     ffca.step()
     ffca.show()
-
+# save phi_values in csv file
+np.savetxt("phi_values.csv", phi_values, delimiter=",")
+plot_order_parameter(phi_values, steps)
 # for pos, value in ffca.structure.grid.items():
 #     print(pos, value)
+
