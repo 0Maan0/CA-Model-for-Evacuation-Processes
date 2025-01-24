@@ -6,16 +6,19 @@ https://journals.aps.org/pre/abstract/10.1103/PhysRevE.75.051402
 # Order parameter to determine the lane formation in the system
 def order_parameter(Ntot, N1, N2):    
     '''
+    This function calculates the order parameter for the system.
+    Input:
     Ntot: Total number of particles
     N1: Number of particles in each row with direction 1 (Array)
     N2: Number of particles in each row with direction 2 (Array)
-    return phi: Order parameter (Fbuloat)
+    Returns:
+    phi: Order parameter (Float)
     '''
     filled_rows = 0
     phi = 0
     for row in range(len(N1)):
         if N1[row] + N2[row] > 0:
-            phi += (((N1[row] - N2[row]))/ (N1[row] + N2[row])) **2
+            phi += ((N1[row] - N2[row])/ (N1[row] + N2[row])) **2
             filled_rows += 1 
     if Ntot == 0 or filled_rows == 0:
         print("No particles in the system, order parameter is not defined.")
@@ -24,18 +27,23 @@ def order_parameter(Ntot, N1, N2):
 
 def mean_order_parameter(phi, phi0):
     '''
+    This function calculates the mean order parameter for the system.
+    Input:
     phi: Order parameter (Float)
+    phi0: Mean order parameter for random distribution (Float)
     '''
     return (phi - phi0) / (1 - phi0)
 
 def plot_order_parameter(phi_values, iterations):
     '''
+    This function plots the order parameter vs iterations.
+    Input:
     phi_values: List of order parameters (List)
-    phi0: Order parameter for random distribution (Float)
+    phi0: Mean order parameter for random distribution (Float)
     '''
     # Make plot pretty
     plt.figure(figsize=(10, 6))
-    plt.plot(range(iterations), phi_values, linestyle='-', color='tab:blue', label='Order Parameter', opacity=0.8)
+    plt.plot(range(iterations), phi_values, linestyle='-', color='tab:blue', label='Order Parameter')
     plt.xlabel("Iterations", fontsize=14)
     plt.ylabel("Order Parameter", fontsize=14)
     plt.title("Order Parameter vs Iterations", fontsize=16)
@@ -49,8 +57,7 @@ def plot_order_parameter(phi_values, iterations):
     return None
 
 if __name__ == "__main__":
-    Ntot = 50
-    N1 = np.array([0, 0])
-    N2 = np.array([0, 0])
-    phi_value = order_parameter(Ntot, N1, N2)
-    print(f"""Order parameter: {phi_value}""")
+    # Open phi_values.csv file and plot the order parameter
+    phi_values = np.loadtxt("phi_values.csv", delimiter=",")
+    iterations = len(phi_values)
+    plot_order_parameter(phi_values, iterations)
