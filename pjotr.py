@@ -436,7 +436,7 @@ class FFCA:
         # extract moved agents
         moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
         self.update_dynamic_field(moved_cells)
-        # self.spawn_agents()
+        self.spawn_agents()
 
     # quick and dirty show function to test the correctness of the program
     def show(self):

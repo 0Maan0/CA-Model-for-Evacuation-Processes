@@ -242,7 +242,7 @@ class FFCA:
         # spawn rate
         self.beta = 0.025
         # horizontal bias
-        self.horizontal_bias = 50
+        self.horizontal_bias = 5000
 
         # structure initialisation
         self.structure = Grid(to_corridor(r, c))
@@ -542,6 +542,9 @@ def move_agents(agents, exit_position, grid_size):
 
     return new_agents
 
+
+# Visualisation of the grid and agent positions
+
 import matplotlib.pyplot as plt
 import numpy as np
 import imageio
@@ -556,10 +559,10 @@ def grid_to_image(grid: Grid) -> np.ndarray:
     
     # Define color mapping for agents and obstacles
     color_map = {
-        OBSTACLE: [0, 0, 0],  # black for obstacles
-        EXIT: [0, 255, 0],  # red for exits
-        AGENT_1: [255, 0, 0],  # green for agent 1
-        AGENT_2: [0, 0, 255],  # blue for agent 2
+        OBSTACLE: [0, 128, 131],  # dark green for walls
+        EXIT: [142, 197, 130],  # light green for exits
+        AGENT_1: [239, 127, 54],  # orange for agent 1
+        AGENT_2: [41, 114, 182],  # blue for agent 2
         EMPTY: [255, 255, 255],  # white for empty cells
     }
     
@@ -570,35 +573,31 @@ def grid_to_image(grid: Grid) -> np.ndarray:
     
     return img
 
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.animation import FuncAnimation
+def visualize_simulation(ffca: FFCA, steps: int, filename: str = 'simulation.gif', delay: float = 0.05):
+    frames = []
+    
+    for i in range(steps):
+        # Get image for current state of the grid
+        img = grid_to_image(ffca.structure)
+        
+        # Append the frame to the list
+        frames.append(img)
+        
+        # Perform a simulation step (move agents, update dynamic field, etc.)
+        ffca.step()
+    
+    # Create and save GIF
+    imageio.mimsave(filename, frames, duration=delay)
+    print(f"GIF saved as {filename}")
 
-# Sample function to visualize the grid
-def visualize_ffca(ffca, steps, output_file="visualization.gif"):
-    fig, ax = plt.subplots(figsize=(30, 15))  # Increase the figsize for a larger GIF
-
-    def update(frame):
-        ax.clear()
-        ax.set_title(f"Step {frame}")
-        grid = np.zeros((ffca.structure.Rmax + 2, ffca.structure.Cmax + 2), dtype=int)
-        for pos, value in ffca.structure.items():
-            grid[pos.r, pos.c] = value
-
-        ax.imshow(grid, cmap="viridis", interpolation="nearest")
-        ffca.step()  # Step the FFCA forward
-
-    ani = FuncAnimation(fig, update, frames=steps, interval=50)
-    ani.save(output_file, writer="pillow", fps=10)
-
-# Usage
-ffca = FFCA(10, 100, 50)  # Adjust parameters as necessary
-visualize_ffca(ffca, steps=100, output_file="corridor_simulation.gif")
+# Call the visualization function
+ffca = FFCA(20, 100, 150)  # Adjust parameters as necessary
+visualize_simulation(ffca, 1000)  # Create GIF for 1000 steps
 
 
-from IPython.display import Image
 
-# Display the GIF (works in Jupyter notebooks)
-Image(filename='simulation.gif')
+
+
+
 
 
