@@ -29,7 +29,7 @@ def test_collision():
 # test_collision()
 
 
-def test1():
+def test_small():
     cmax = 40
     rmax = 3
     r = 2
