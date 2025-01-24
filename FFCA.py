@@ -93,8 +93,9 @@ class FFCA:
         self.init_static_fields()
 
         # dynamic field initialisation
-        self.dynamic_field = None
-        self.dynamic_field = self.init_dynamic_field()
+        self.dynamic_field_1 = None
+        self.dynamic_field_2 = None
+        self.dynamic_field_1, self.dynamic_field_2 = self.init_dynamic_fields()
 
     def init_agents(self, agent_count):
         """
@@ -171,12 +172,13 @@ class FFCA:
 
                     # Determine the static field to use based on the agent type
                     sf = self.static_field_1 if val == AGENT_1 else self.static_field_2
+                    df = self.dynamic_field_1 if val == AGENT_1 else self.dynamic_field_2
                     field_pos = nb - Pos(1, 0)
                     assert field_pos in sf
-                    assert field_pos in self.dynamic_field
+                    assert field_pos in df
 
                     # Calculate transition probability
-                    p = np.exp(self.ks * sf[field_pos] + self.kd * self.dynamic_field[field_pos])
+                    p = np.exp(self.ks * sf[field_pos] + self.kd * df[field_pos])
 
                     # Apply horizontal bias for agents
                     horizontal_bias = 1
@@ -272,16 +274,17 @@ class FFCA:
             if np.random.random() < self.beta:
                 self.structure[structure_pos] = AGENT_2
 
-    def init_dynamic_field(self):
+    def init_dynamic_fields(self):
         """
         Initialises the dynamic field with zeros.
         returns: the dynamic field (Grid)
         """
         R, C = self.structure.Rmax, self.structure.Cmax
-        dynamic_field = Grid([[0 for _ in range(C + 2)] for _ in range(R)])
-        return dynamic_field
+        dynamic_field_1 = Grid([[0 for _ in range(C + 2)] for _ in range(R)])
+        dynamic_field_2 = Grid([[0 for _ in range(C + 2)] for _ in range(R)])
+        return dynamic_field_1, dynamic_field_2
 
-    def update_dynamic_field(self, moved_cells):
+    def update_dynamic_field(self, dynamic_field, moved_cells, agent_type):
         """
         Updates the dynamic field according to the mechanics described in the
         base paper. Models diffusion and decay of the agents using a
@@ -290,20 +293,20 @@ class FFCA:
             (List[Pos])
         """
         for p in moved_cells:
-            self.dynamic_field[p] += 1
+            dynamic_field[p] += 1
 
         new_dynamic_field = Grid([[0 for _ in range(self.structure.Cmax + 2)] for _ in range(self.structure.Rmax)])
 
-        for pos in self.dynamic_field:
+        for pos in dynamic_field:
             delta = 0
             for nb in pos.nbs():
                 # absorbing boundary conditions (we skip if not in the grid)
-                if nb in self.dynamic_field:
-                    delta += self.dynamic_field[nb]
-            delta -= 4 * self.dynamic_field[pos]
-            delta = (1 - self.delta) * (self.dynamic_field[pos] + self.alpha / 4 * delta)
+                if nb in dynamic_field and self.structure[nb] == agent_type:
+                    delta += dynamic_field[nb]
+            delta -= 4 * dynamic_field[pos]
+            delta = (1 - self.delta) * (dynamic_field[pos] + self.alpha / 4 * delta)
             new_dynamic_field[pos] = delta
-        self.dynamic_field = new_dynamic_field
+        return new_dynamic_field
 
     def step(self):
         """
@@ -313,8 +316,12 @@ class FFCA:
         # extract moved agents
         position_map = self.move_agents()
         moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
+        moved_cells1 = [pos for pos in moved_cells if self.structure[pos] == AGENT_1]
+        moved_cells2 = [pos for pos in moved_cells if self.structure[pos] == AGENT_2]
 
-        self.update_dynamic_field(moved_cells)
+        # update both dynamic fields
+        self.dynamic_field_1 = self.update_dynamic_field(self.dynamic_field_1, moved_cells1, AGENT_1)
+        self.dynamic_field_2 = self.update_dynamic_field(self.dynamic_field_2, moved_cells2, AGENT_2)
         self.spawn_agents()
 
     def show(self):

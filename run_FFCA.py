@@ -77,3 +77,4 @@ def run():
     np.savetxt("phi_values.csv", phi_values, delimiter=",")
     plot_order_parameter(phi_values, steps)
 run()
+
