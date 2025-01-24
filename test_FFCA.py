@@ -27,7 +27,7 @@ def test_collision():
 # test_collision()
 
 
-def test1():
+def test_small():
     cmax = 40
     rmax = 3
     r = 2
@@ -45,7 +45,20 @@ def test1():
         ffca.show()
 
 
-test1()
+# test_small()
+
+
+def test_big():
+    ffca = FFCA(10, 50, 20, None, spawn_rate=0.03)
+    steps = 100
+    ffca.show()
+    for i in range(steps):
+        time.sleep(0.5)
+        ffca.step()
+        ffca.show()
+
+
+test_big()
 
 
 def run():

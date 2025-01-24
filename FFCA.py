@@ -51,7 +51,10 @@ class FFCA:
     structure of the grid. The FFCA has a step function that combines all the
     update functionality, to update the positions of the agents.
     """
-    def __init__(self, r, c, agent_count, agents_list=None):
+    def __init__(self, r, c, agent_count, agents_list=None, spawn_rate=0.025,
+                 conflict_resolution_rate=0.5, alpha=0.3, delta,
+                 static_field_strength=2.5, dynamic_field_strength=3.0,
+                 horizontal_bias=5000,):
         """
         Initialises the FFCA model with the given parameters.
         r: the amount of rows of the corridor, (int)
@@ -61,19 +64,19 @@ class FFCA:
             (List[Tuple[Pos, int]])
         """
         # alpha is the strength of the dynamic field
-        self.alpha = 0.3
+        self.alpha = alpha
         # delta is the decay rate of the dynamic field
-        self.delta = 0.1
+        self.delta = delta
         # ks is the strength of the static field
-        self.ks = 2.5
+        self.ks = static_field_strength
         # kd is the decay rate of the dynamic field
-        self.kd = 3.0
+        self.kd = dynamic_field_strength
         # conflict resolution probability
-        self.mu = 0.5
+        self.mu = conflict_resolution_rate
         # spawn rate
-        self.beta = 0.025
+        self.beta = spawn_rate
         # horizontal bias
-        self.horizontal_bias = 5000
+        self.horizontal_bias = horizontal_bias
 
         # structure initialisation
         self.structure = Grid(to_corridor(r, c))
@@ -312,7 +315,7 @@ class FFCA:
         moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
 
         self.update_dynamic_field(moved_cells)
-        # self.spawn_agents()
+        self.spawn_agents()
 
     def show(self):
         """
