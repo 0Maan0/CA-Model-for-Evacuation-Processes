@@ -240,7 +240,7 @@ class FFCA:
         # conflict resolution probability
         self.mu = 0.5
         # spawn rate
-        self.beta = 0.025
+        self.beta = 0.05
         # horizontal bias
         self.horizontal_bias = 5000
 
@@ -591,8 +591,8 @@ def visualize_simulation(ffca: FFCA, steps: int, filename: str = 'simulation.gif
     print(f"GIF saved as {filename}")
 
 # Call the visualization function
-ffca = FFCA(20, 100, 150)  # Adjust parameters as necessary
-visualize_simulation(ffca, 1000)  # Create GIF for 1000 steps
+ffca = FFCA(20, 100, 100)  # Adjust parameters as necessary
+visualize_simulation(ffca, 5000)  # Create GIF for 1000 steps
 
 
 
