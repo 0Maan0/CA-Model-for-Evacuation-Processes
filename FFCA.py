@@ -366,29 +366,3 @@ def to_corridor(R, C):
     s += '#' * (C + 2)
 
     return string_to_ints(s)
-
-
-def test_simple():
-    # test agents
-    agents = [(Pos(1, 1), 1), (Pos(1, 5), 2)]
-    ffca = FFCA(1, 5, 0, agents)
-    steps = 10
-    ffca.show()
-    for i in range(steps):
-        time.sleep(0.5)
-        ffca.step()
-        ffca.show()
-
-# test_simple()
-
-
-def run():
-    ffca = FFCA(10, 100, 50)
-    ffca.show()
-    steps = 1000
-    for i in range(steps):
-        time.sleep(0.05)
-        ffca.step()
-        ffca.show()
-
-run()
