@@ -29,8 +29,8 @@ EMPTY = 3
 MAP_TO_STRING = {
     OBSTACLE: '#',
     EXIT: 'E',
-    AGENT_1: '1',
-    AGENT_2: '2',
+    AGENT_1: 'X',
+    AGENT_2: 'O',
     EMPTY: '.',
 }
 
@@ -264,6 +264,8 @@ class FFCA:
         for pos in entrances1:
             # map to structure position and move one step into the field
             structure_pos = pos + Pos(1, 1)
+            if self.structure[structure_pos] != EMPTY:
+                continue
             if np.random.random() < self.beta:
                 self.structure[structure_pos] = AGENT_1
 
@@ -271,6 +273,8 @@ class FFCA:
         for pos in entrances2:
             # map to structure position and move one step into the field
             structure_pos = pos + Pos(1, -1)
+            if self.structure[structure_pos] != EMPTY:
+                continue
             if np.random.random() < self.beta:
                 self.structure[structure_pos] = AGENT_2
 
