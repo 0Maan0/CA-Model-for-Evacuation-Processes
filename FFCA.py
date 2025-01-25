@@ -54,7 +54,7 @@ class FFCA:
     def __init__(self, r, c, agent_count, agents_list=None, spawn_rate=0.025,
                  conflict_resolution_rate=0.5, alpha=0.3, delta=0.2,
                  static_field_strength=2.5, dynamic_field_strength=3.0,
-                 horizontal_bias=5000,):
+                 horizontal_bias=100,):
         """
         Initialises the FFCA model with the given parameters.
         r: the amount of rows of the corridor, (int)
