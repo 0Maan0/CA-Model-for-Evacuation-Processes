@@ -357,6 +357,9 @@ class FFCA:
         pass
 
     def agents_in_row(self, structure):
+        """
+        Determines the amount of agents in each row of the grid.
+        """
         agent_counts = defaultdict(lambda: {AGENT_1: 0, AGENT_2: 0})
         for pos, val in structure.items():
             if val in [AGENT_1, AGENT_2]:
@@ -367,7 +370,45 @@ class FFCA:
             N1.append(agent_counts[row][AGENT_1])
             N2.append(agent_counts[row][AGENT_2])
         return N1, N2
+    
+    def agents_at_exit(self, structure):
+        """
+        Determines in which rows agents are leaving or entering the grid.
+        """
+        agent_1_leaving = np.zeros(structure.Rmax)
+        agent_2_leaving = np.zeros(structure.Rmax)
+        agent_1_entering = np.zeros(structure.Rmax)
+        agent_2_entering = np.zeros(structure.Rmax)
 
+        left_exits = self.static_field_2.findall(0)
+        for pos in left_exits:
+            # Determine if an agent is at the left exit
+            structure_pos = pos + Pos(1, 1)
+            if self.structure[structure_pos] != EMPTY:
+                if self.structure[structure_pos] == AGENT_1:
+                    #print("Agent r at left exit {}".format(structure_pos))
+                    #self.structure[structure_pos] = OBSTACLE
+                    agent_1_entering[structure_pos.r-1] += 1
+
+                elif self.structure[structure_pos] == AGENT_2:
+                    #print("Agent l at left exit {}".format(structure_pos))
+                    #self.structure[structure_pos] = OBSTACLE
+                    agent_2_leaving[structure_pos.r-1] += 1
+
+        right_exits = self.static_field_1.findall(0)
+        for pos in right_exits:
+            # Determine if an agent is at the right exit
+            structure_pos = pos + Pos(1, -1)
+            if self.structure[structure_pos] != EMPTY:
+                if self.structure[structure_pos] == AGENT_1:
+                    #print("Agent r at right exit {}".format(structure_pos))
+                    #self.structure[structure_pos] = OBSTACLE
+                    agent_1_leaving[structure_pos.r-1] += 1
+                elif self.structure[structure_pos] == AGENT_2:
+                    #print("Agent l at right exit {}".format(structure_pos))
+                    #self.structure[structure_pos] = OBSTACLE
+                    agent_2_entering[structure_pos.r-1] += 1
+        return agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_entering
 
 def string_to_ints(str):
     """
