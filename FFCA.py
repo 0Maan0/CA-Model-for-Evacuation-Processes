@@ -386,13 +386,9 @@ class FFCA:
             structure_pos = pos + Pos(1, 1)
             if self.structure[structure_pos] != EMPTY:
                 if self.structure[structure_pos] == AGENT_1:
-                    #print("Agent r at left exit {}".format(structure_pos))
-                    #self.structure[structure_pos] = OBSTACLE
                     agent_1_entering[structure_pos.r-1] += 1
 
                 elif self.structure[structure_pos] == AGENT_2:
-                    #print("Agent l at left exit {}".format(structure_pos))
-                    #self.structure[structure_pos] = OBSTACLE
                     agent_2_leaving[structure_pos.r-1] += 1
 
         right_exits = self.static_field_1.findall(0)
@@ -401,12 +397,8 @@ class FFCA:
             structure_pos = pos + Pos(1, -1)
             if self.structure[structure_pos] != EMPTY:
                 if self.structure[structure_pos] == AGENT_1:
-                    #print("Agent r at right exit {}".format(structure_pos))
-                    #self.structure[structure_pos] = OBSTACLE
                     agent_1_leaving[structure_pos.r-1] += 1
                 elif self.structure[structure_pos] == AGENT_2:
-                    #print("Agent l at right exit {}".format(structure_pos))
-                    #self.structure[structure_pos] = OBSTACLE
                     agent_2_entering[structure_pos.r-1] += 1
         return agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_entering
 
