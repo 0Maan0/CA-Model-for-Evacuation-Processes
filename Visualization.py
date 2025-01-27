@@ -11,12 +11,6 @@ AGENT_1 = 1
 AGENT_2 = 2
 EMPTY = 3
 
-# Parameters for the grid and simulation
-grid_size = (20, 20)  # Grid dimensions
-num_agents = 30       # Number of agents
-num_steps = 50        # Number of steps in the simulation
-exit_position = (0, 10)  # Exit location
-
 # Visualisation of the grid and agent positions
 
 import matplotlib.pyplot as plt
@@ -47,7 +41,7 @@ def grid_to_image(grid: Grid) -> np.ndarray:
     
     return img
 
-def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'simulation.gif', delay: float = 0.05):
+def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'r30_c50_n100_kd3_hori_bias_5000.gif', delay: float = 0.05):
     frames = []
     
     for i in range(steps):
@@ -66,10 +60,10 @@ def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'simulatio
 
 if __name__ == "__main__":
     # Call the visualization function
-    ffca = FFCA_wrap(20, 100, 100, spawn_rate=0.025,
+    ffca = FFCA_wrap(30, 50, 100, spawn_rate=0.025,
                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
-                    static_field_strength=2.5, dynamic_field_strength=5,
-                    horizontal_bias=50)  # Adjust parameters as necessary
+                    static_field_strength=2.5, dynamic_field_strength=3,
+                    horizontal_bias=5000)  
     visualize_simulation(ffca, 2000)  # Create GIF for 1000 steps
 
 
