@@ -81,6 +81,8 @@ class FFCA:
         # structure initialisation
         self.structure = Grid(to_corridor(r, c))
         self.structure = self.init_agents(agent_count)
+        self.structure_wrapped = self.get_wrapped_structure()
+
         if agents_list:
             for pos, agent in agents_list:
                 self.structure[pos] = agent
@@ -135,6 +137,14 @@ class FFCA:
         # Step 1: Generate movement probabilities for each agent
         positions_map = self._generate_probabilities()
 
+        # map all new positions to be inside of the structure instead of
+        # the wrapped structure
+        for pos, new_pos in positions_map.items():
+            if new_pos.c == self.structure.Cmax + 1:
+                positions_map[pos] = Pos(new_pos.r, 1)
+            elif new_pos.c == 0:
+                positions_map[pos] = Pos(new_pos.r, self.structure.Cmax)
+
         # Step 2: Solve conflicts between agents moving to the same position
         positions_map = self._solve_conflicts(positions_map)
 
@@ -167,7 +177,7 @@ class FFCA:
                     nb = pos + Pos(dr, dc)
 
                     # Skip invalid cells
-                    if self.structure[nb] in [AGENT_1, AGENT_2, OBSTACLE, float('inf')]:
+                    if self.structure_wrapped[nb] in [AGENT_1, AGENT_2, OBSTACLE]:
                         continue
 
                     # Determine the static field to use based on the agent type
@@ -210,6 +220,8 @@ class FFCA:
         return positions_map
 
 
+    # TODO: fix the fact that we have multiple agents moving to the same position
+    
     def _solve_conflicts(self, positions_map):
         """
         Resolves conflicts where multiple agents want to move to the same position.
@@ -221,6 +233,8 @@ class FFCA:
         for new_position in new_positions:
             if new_positions.count(new_position) > 1:  # Conflict detected
                 if not np.random.random() > self.mu:  # Conflict not resolved
+
+                    # no one moves
                     for old_pos, new_pos in positions_map.items():
                         if new_pos == new_position:
                             positions_map[old_pos] = old_pos
@@ -231,11 +245,15 @@ class FFCA:
                     else:
                         continue
 
+                    # only the winner moves
                     for old_pos in conflicted_positions:
                         if old_pos == winner:
                             positions_map[old_pos] = new_position
                         else:
                             positions_map[old_pos] = old_pos
+
+        new_positions = list(positions_map.values())
+        assert len(new_positions) == len(set(new_positions)), "Agents are moving to the same position"
 
         return positions_map
 
@@ -248,11 +266,26 @@ class FFCA:
         for old_pos, new_pos in positions_map.items():
             if old_pos == new_pos:
                 continue
-            if self.structure[new_pos] == EXIT:
+            # if agent on exit, we move it to the other side: next to the exit
+            # on the other side
+            if new_pos.c == self.structure.Cmax + 1:
+                self.structure[Pos(new_pos.r, 1)] = self.structure[old_pos]
+                self.structure[old_pos] = EMPTY
+            elif new_pos.c == 0:
+                self.structure[Pos(new_pos.r, self.structure.Cmax)] = self.structure[old_pos]
                 self.structure[old_pos] = EMPTY
             else:
                 self.structure[new_pos] = self.structure[old_pos]
                 self.structure[old_pos] = EMPTY
+
+    def get_wrapped_structure(self):
+        structure_wrapped = self.structure.copy()
+        for r in range(self.structure.Rmax):
+            # add the first olumn to the end:
+            structure_wrapped[Pos(r, self.structure.Cmax - 1)] = self.structure[Pos(r, 0)]
+            # add the last column to the beginning:
+            structure_wrapped[Pos(r, 0)] = self.structure[Pos(r, self.structure.Cmax)]
+        return structure_wrapped
 
     def spawn_agents(self):
         """
@@ -326,7 +359,8 @@ class FFCA:
         # update both dynamic fields
         self.dynamic_field_1 = self.update_dynamic_field(self.dynamic_field_1, moved_cells1, AGENT_1)
         self.dynamic_field_2 = self.update_dynamic_field(self.dynamic_field_2, moved_cells2, AGENT_2)
-        self.spawn_agents()
+        self.structure_wrapped = self.get_wrapped_structure()
+        # self.spawn_agents()
 
     def show(self):
         """
