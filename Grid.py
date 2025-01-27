@@ -196,15 +196,6 @@ class Grid:
             result += row_str + "\n"
         return result
 
-    def show(self, positions: Set[Pos]=set()) -> None:
-        print(self.Rmax, self.Cmax)
-        for r in range(self.Rmin, self.Rmax + 1):
-            for c in range(self.Cmin, self.Cmax + 1):
-                pos = Pos(r, c)
-                print(self.grid[pos], end='')
-            print()
-        print()
-
     def remove(self, values: Set[float]) -> None:
         keys_to_remove = [pos for pos, value in self.items() if value in values]
         for key in keys_to_remove:
