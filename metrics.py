@@ -100,12 +100,34 @@ def plot_total_flux(total_fluxes_agent_1, total_fluxes_agent_2):
     plt.show()
     return None
 
+def plot_dynamic_field_strength():
+    phi_dsf3 = np.loadtxt("simulation_results/phi_values_dfs3.0.csv", delimiter=",")
+    phi_dsf5 = np.loadtxt("simulation_results/phi_values_dfs5.0.csv", delimiter=",")
+    phi_dsf7 = np.loadtxt("simulation_results/phi_values_dfs7.0.csv", delimiter=",")
+    phi_dsf9 = np.loadtxt("simulation_results/phi_values_dfs9.0.csv", delimiter=",")
+    iterations = range(len(phi_dsf3))
+    print(phi_dsf3)
+    plt.figure(figsize=(10, 6))
+    plt.plot(iterations, phi_dsf3, linestyle='-', color='tab:blue', label='Dynamic Field Strength 3')
+    plt.plot(iterations, phi_dsf5, linestyle='-', color='tab:red', label='Dynamic Field Strength 5')
+    plt.plot(iterations, phi_dsf7, linestyle='-', color='tab:green', label='Dynamic Field Strength 7')
+    plt.plot(iterations, phi_dsf9, linestyle='-', color='tab:orange', label='Dynamic Field Strength 9')
+    plt.xlabel("Iterations", fontsize=14)
+    plt.ylabel("Order Parameter", fontsize=14)
+    plt.title("Order Parameter vs Iterations", fontsize=16)
+    plt.grid(True)
+    plt.legend()
+    plt.savefig("Figures/order_parameter_dynamic_field_strength.pdf")
+    plt.show()
+    
+
 if __name__ == "__main__":
     # Open phi_values.csv file and plot the order parameter
-    phi_values = np.loadtxt("phi_values.csv", delimiter=",")
-    iterations = len(phi_values)
-    plot_order_parameter(phi_values, iterations)
+    #phi_values = np.loadtxt("Figures/phi_values.csv", delimiter=",")
+    #iterations = len(phi_values)
+    #plot_order_parameter(phi_values, iterations)
     # Open flux_values_1.csv and flux_values_2.csv files and plot the total flux
-    flux_values_1 = np.loadtxt("flux_values_1.csv", delimiter=",")
-    flux_values_2 = np.loadtxt("flux_values_2.csv", delimiter=",")
-    plot_total_flux(flux_values_1, flux_values_2)
+    #flux_values_1 = np.loadtxt("flux_values_1.csv", delimiter=",")
+    #flux_values_2 = np.loadtxt("flux_values_2.csv", delimiter=",")
+    #plot_total_flux(flux_values_1, flux_values_2)
+    plot_dynamic_field_strength()
