@@ -7,7 +7,7 @@ Description:    This file imports the FFCA class and runs some standard
 scenarios to see the visually see the FFCA interactions.
 """
 
-from FFCA import FFCA
+from FFCA_wrap import FFCA
 from Grid import Grid, Pos
 from lane_formation_metric import order_parameter, mean_order_parameter, plot_order_parameter
 import time
@@ -16,17 +16,15 @@ import numpy as np
 
 def test_collision():
     # test agents
-    agents = [(Pos(1, 1), 1), (Pos(1, 5), 2)]
-    ffca = FFCA(1, 5, 0, agents)
+    agents = [(Pos(1, 1), 1), (Pos(1, 4), 2)]
+    ffca = FFCA(2, 4, 0, agents)
     steps = 10
     ffca.show()
     for i in range(steps):
         time.sleep(0.5)
+        # print(ffca.structure)
         ffca.step()
         ffca.show()
-
-
-# test_collision()
 
 
 def test_small():
@@ -34,12 +32,12 @@ def test_small():
     rmax = 3
     r = 2
     c = cmax
-    left_agents = [(Pos(r, 1 + 2 * i), 1) for i in range(2)]
+    left_agents = [(Pos(r, 1 + 2 * i), 1) for i in range(1)]
     right_agents = [(Pos(r, c - 2 * i), 2) for i in range(10)]
     agents = left_agents + right_agents
 
     ffca = FFCA(rmax, cmax, 0, agents)
-    steps = 30
+    steps = 300
     ffca.show()
     for i in range(steps):
         time.sleep(0.5)
@@ -47,20 +45,15 @@ def test_small():
         ffca.show()
 
 
-test_small()
-
-
-def test_big():
-    ffca = FFCA(10, 100, 20, spawn_rate=0.06, conflict_resolution_rate=0,
-                dynamic_field_strength=10)
+def bleh():
+    ffca = FFCA(5, 20, 5, spawn_rate=0.06, conflict_resolution_rate=0,
+                alpha=0.95, delta=0.05, dynamic_field_strength=50)
     steps = 1000
     ffca.show()
     for i in range(steps):
+        time.sleep(0.5)
         ffca.step()
         ffca.show()
-
-
-# test_big()
 
 
 def run():
@@ -93,3 +86,10 @@ def run():
 
 # run()
 
+def main():
+    # test_collision()
+    # test_small()
+    bleh()
+
+if __name__ == "__main__":
+    main()
