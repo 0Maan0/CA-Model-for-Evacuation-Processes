@@ -100,7 +100,10 @@ def visualize_simulation(ffca: FFCA, steps: int, filename: str = 'simulation.gif
     print(f"GIF saved as {filename}")
 
 # Call the visualization function
-ffca = FFCA(20, 100, 100)  # Adjust parameters as necessary
-visualize_simulation(ffca, 100)  # Create GIF for 1000 steps
+ffca = FFCA(20, 100, 100, spawn_rate=0.025,
+                 conflict_resolution_rate=0, alpha=0.3, delta=0.3,
+                 static_field_strength=2.5, dynamic_field_strength=3,
+                 horizontal_bias=50)  # Adjust parameters as necessary
+visualize_simulation(ffca, 2000)  # Create GIF for 1000 steps
 
 
