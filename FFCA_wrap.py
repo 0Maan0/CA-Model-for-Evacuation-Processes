@@ -29,8 +29,8 @@ EMPTY = 3
 MAP_TO_STRING = {
     OBSTACLE: '#',
     EXIT: 'E',
-    AGENT_1: 'X',
-    AGENT_2: 'O',
+    AGENT_1: 'R',
+    AGENT_2: 'L',
     EMPTY: '.',
 }
 
@@ -43,6 +43,9 @@ MAP = {
     '.': EMPTY,
 }
 
+# we want to print the new positions for all the agents in the step function
+# and we also want to print the probabilities for all the agents in the step function
+# if we have verbose on that is
 class FFCA_wrap:
     """
     FFCA class, represents the FFCA model. It contains two static fields of
@@ -53,8 +56,8 @@ class FFCA_wrap:
     """
     def __init__(self, r, c, agent_count, agents_list=None, spawn_rate=0.025,
                  conflict_resolution_rate=0.5, alpha=0.3, delta=0.2,
-                 static_field_strength=2.5, dynamic_field_strength=8.0,
-                 horizontal_bias=5000,):
+                 static_field_strength=2.5, dynamic_field_strength=3.0,
+                 horizontal_bias=5000, verbose=False):
         """
         Initialises the FFCA model with the given parameters.
         r: the amount of rows of the corridor, (int)
@@ -81,11 +84,13 @@ class FFCA_wrap:
         # structure initialisation
         self.structure = Grid(to_corridor(r, c))
         self.structure = self.init_agents(agent_count)
-        self.structure_wrapped = self.get_wrapped_structure()
-
+        # or specific 'debug' agents
         if agents_list:
             for pos, agent in agents_list:
                 self.structure[pos] = agent
+
+        # then initialise the wrapped structure after all agent placement
+        self.structure_wrapped = self.get_wrapped_structure()
 
         # field 1 is defined as 'to the right'
         # field 2 is defined as 'to the left'
@@ -98,6 +103,9 @@ class FFCA_wrap:
         self.dynamic_field_1 = None
         self.dynamic_field_2 = None
         self.dynamic_field_1, self.dynamic_field_2 = self.init_dynamic_fields()
+
+        # verbose for debugging:
+        self.verbose = verbose
 
     def init_agents(self, agent_count):
         """
@@ -217,6 +225,19 @@ class FFCA_wrap:
                 )
                 positions_map[pos] = new_pos
 
+        if self.verbose:
+            print('probabilities:')
+            for pos, ps in pss.items():
+                print(f'pos: {pos}')
+                for p_row in ps:
+                    print(list(map(lambda x: round(x, 2), p_row)))
+                print()
+            print('positions_map:')
+            for pos, new_pos in positions_map.items():
+                print(f'{pos} -> {new_pos}')
+            print()
+            print()
+
         return positions_map
 
 
@@ -253,7 +274,12 @@ class FFCA_wrap:
                             positions_map[old_pos] = old_pos
 
         new_positions = list(positions_map.values())
-        #assert len(new_positions) == len(set(new_positions)), "Agents are moving to the same position"
+        # if not len(new_positions) == len(set(new_positions)):
+        #     # find which two agents have the same new position:
+        #     for opos, npos in positions_map.items():
+        #         if new_positions.count(npos) > 1:
+        #             print(f"Conflict at {opos} and {npos}")
+        assert len(new_positions) == len(set(new_positions)), "Agents are moving to the same position"
 
         return positions_map
 
@@ -281,10 +307,10 @@ class FFCA_wrap:
     def get_wrapped_structure(self):
         structure_wrapped = self.structure.copy()
         for r in range(self.structure.Rmax):
-            # add the first olumn to the end:
-            structure_wrapped[Pos(r, self.structure.Cmax - 1)] = self.structure[Pos(r, 0)]
+            # add the first column to the end: (again the horrific mapping)
+            structure_wrapped[Pos(r + 1, self.structure.Cmax + 1)] = self.structure[Pos(r + 1, 1)]
             # add the last column to the beginning:
-            structure_wrapped[Pos(r, 0)] = self.structure[Pos(r, self.structure.Cmax)]
+            structure_wrapped[Pos(r + 1, 0)] = self.structure[Pos(r + 1, self.structure.Cmax)]
         return structure_wrapped
 
     def spawn_agents(self):
@@ -469,3 +495,22 @@ def to_corridor(R, C):
     s += '#' * (C + 2)
 
     return string_to_ints(s)
+
+
+def get_bounds(grid: Grid) -> List[int]:
+    positions = list(grid.keys())
+    r_values = [pos.r for pos in positions]
+    c_values = [pos.c for pos in positions]
+    return [min(r_values), max(r_values), min(c_values), max(c_values)]
+
+
+def print_grid(grid):
+    rmin, rmax, cmin, cmax = get_bounds(grid)
+    for r in range(rmin, rmax + 1):
+        for c in range(cmin, cmax + 1):
+            pos = Pos(r, c)
+            val = grid[pos]
+            char = MAP_TO_STRING.get(val, '?')
+            print(char, end='')
+        print()
+    print()
