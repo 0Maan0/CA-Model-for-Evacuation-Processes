@@ -2,7 +2,8 @@
 run as pytest test_simulation.py in terminal
 '''
 import pytest 
-from pjotr import Grid, Pos, FFCA, to_corridor, EMPTY, OBSTACLE, EXIT, AGENT_1, AGENT_2
+from FFCA import to_corridor, EMPTY, OBSTACLE, EXIT, AGENT_1, AGENT_2
+from Grid import Grid
 
 def test_to_corridor():
     created_corridor = to_corridor(5, 5)
