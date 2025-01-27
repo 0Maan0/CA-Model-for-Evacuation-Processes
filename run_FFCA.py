@@ -75,6 +75,50 @@ def run_wrap():
         ffca.step()
         ffca.show()
 
+def run_wrap_statistics():
+    cmax = 100
+    rmax = 10
+    r = 2
+    c = cmax
+    left_agents = [(Pos(r, 1 + 2 * i), 1) for i in range(1)]
+    right_agents = [(Pos(r, c - 2 * i), 2) for i in range(10)]
+    agents = left_agents + right_agents
+    Ntot = 50
+    ffca = FFCA_wrap(rmax, cmax, Ntot, agents)
+    steps = 500
+    ffca.show()
+    random_phi_values = []
+    for _ in range(100):
+        ffca = FFCA_wrap(rmax, cmax, Ntot)
+        N1, N2 = ffca.agents_in_row(ffca.structure)
+        random_phi_values.append(order_parameter(Ntot, N1, N2))
+    phi_zero = np.mean(random_phi_values)
+    ffca = FFCA_wrap(rmax, cmax, Ntot)
+    phi_values = np.zeros(steps)
+    flux_values_1 = np.zeros(steps)
+    flux_values_2 = np.zeros(steps)
+    total_flux_counter_1 = 0
+    total_flux_counter_2 = 0
+    for i in range(steps):
+        time.sleep(0.05)
+        # print(f"Step {i}")
+        current_phi = order_parameter(Ntot, *ffca.agents_in_row(ffca.structure))
+        current_mean_phi = mean_order_parameter(current_phi, phi_zero)
+        ffca.show()
+        agent_fluxes = agent_flux(*ffca.agents_at_exit(ffca.structure))
+        total_flux_counter_1 += agent_fluxes[0]
+        total_flux_counter_2 += agent_fluxes[1]
+        flux_values_1[i] = total_flux_counter_1
+        flux_values_2[i] = total_flux_counter_2
+        phi_values[i] = current_mean_phi
+        ffca.step()
+        ffca.show()
+    # save 2 arrays in csv file
+    np.savetxt("flux_values_1.csv", flux_values_1, delimiter=",")
+    np.savetxt("flux_values_2.csv", flux_values_2, delimiter=",")
+    # save phi_values in csv file
+    np.savetxt("phi_values.csv", phi_values, delimiter=",")
+    #plot_order_parameter(phi_values, steps)
 
 def run():
     Ntot = 50 # total number of agents
@@ -118,8 +162,9 @@ def run():
 
 
 def main():
-    # run()
-    run_wrap()
+    #  run()
+    # run_wrap()
+    run_wrap_statistics()
     # run()
     # test_collision()
     # test_small()

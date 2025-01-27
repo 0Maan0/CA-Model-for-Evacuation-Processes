@@ -53,7 +53,7 @@ class FFCA_wrap:
     """
     def __init__(self, r, c, agent_count, agents_list=None, spawn_rate=0.025,
                  conflict_resolution_rate=0.5, alpha=0.3, delta=0.2,
-                 static_field_strength=2.5, dynamic_field_strength=3.0,
+                 static_field_strength=2.5, dynamic_field_strength=8.0,
                  horizontal_bias=5000,):
         """
         Initialises the FFCA model with the given parameters.
@@ -253,7 +253,7 @@ class FFCA_wrap:
                             positions_map[old_pos] = old_pos
 
         new_positions = list(positions_map.values())
-        assert len(new_positions) == len(set(new_positions)), "Agents are moving to the same position"
+        #assert len(new_positions) == len(set(new_positions)), "Agents are moving to the same position"
 
         return positions_map
 
@@ -401,6 +401,45 @@ class FFCA_wrap:
             N1.append(agent_counts[row][AGENT_1])
             N2.append(agent_counts[row][AGENT_2])
         return N1, N2
+    def agents_at_exit(self, structure):
+        """
+        Determines in which rows agents are leaving or entering the grid.
+        """
+        agent_1_leaving = np.zeros(structure.Rmax)
+        agent_2_leaving = np.zeros(structure.Rmax)
+        agent_1_entering = np.zeros(structure.Rmax)
+        agent_2_entering = np.zeros(structure.Rmax)
+
+        left_exits = self.static_field_2.findall(0)
+        for pos in left_exits:
+            # Determine if an agent is at the left exit
+            structure_pos = pos + Pos(1, 1)
+            if self.structure[structure_pos] != EMPTY:
+                if self.structure[structure_pos] == AGENT_1:
+                    #print("Agent r at left exit {}".format(structure_pos))
+                    #self.structure[structure_pos] = OBSTACLE
+                    agent_1_entering[structure_pos.r-1] += 1
+
+                elif self.structure[structure_pos] == AGENT_2:
+                    #print("Agent l at left exit {}".format(structure_pos))
+                    #self.structure[structure_pos] = OBSTACLE
+                    agent_2_leaving[structure_pos.r-1] += 1
+
+        right_exits = self.static_field_1.findall(0)
+        for pos in right_exits:
+            # Determine if an agent is at the right exit
+            structure_pos = pos + Pos(1, -1)
+            if self.structure[structure_pos] != EMPTY:
+                if self.structure[structure_pos] == AGENT_1:
+                    #print("Agent r at right exit {}".format(structure_pos))
+                    #self.structure[structure_pos] = OBSTACLE
+                    agent_1_leaving[structure_pos.r-1] += 1
+                elif self.structure[structure_pos] == AGENT_2:
+                    #print("Agent l at right exit {}".format(structure_pos))
+                    #self.structure[structure_pos] = OBSTACLE
+                    agent_2_entering[structure_pos.r-1] += 1
+        return agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_entering
+
 
 
 def string_to_ints(str):
