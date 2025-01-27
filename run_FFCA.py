@@ -7,7 +7,9 @@ Description:    This file imports the FFCA class and runs some standard
 scenarios to see the visually see the FFCA interactions.
 """
 
-from FFCA_wrap import FFCA
+# from FFCA_wrap import FFCA
+from FFCA import FFCA
+from FFCA_wrap import FFCA_wrap
 from Grid import Grid, Pos
 from metrics import order_parameter, mean_order_parameter, plot_order_parameter, agent_flux
 import time
@@ -45,13 +47,28 @@ def test_small():
         ffca.show()
 
 
-#test_small()
-
-
 def test_big():
     ffca = FFCA(10, 100, 20, spawn_rate=0.06, conflict_resolution_rate=0,
                 dynamic_field_strength=10)
     steps = 1000
+    ffca.show()
+    for i in range(steps):
+        time.sleep(0.5)
+        ffca.step()
+        ffca.show()
+
+
+def run_wrap():
+    cmax = 40
+    rmax = 3
+    r = 2
+    c = cmax
+    left_agents = [(Pos(r, 1 + 2 * i), 1) for i in range(1)]
+    right_agents = [(Pos(r, c - 2 * i), 2) for i in range(10)]
+    agents = left_agents + right_agents
+
+    ffca = FFCA_wrap(rmax, cmax, 0, agents)
+    steps = 300
     ffca.show()
     for i in range(steps):
         time.sleep(0.5)
@@ -100,12 +117,14 @@ def run():
     #plot_order_parameter(phi_values, steps)
 
 
-run()
-
 def main():
+    # run()
+    run_wrap()
+    # run()
     # test_collision()
     # test_small()
-    bleh()
+    pass
+
 
 if __name__ == "__main__":
     main()

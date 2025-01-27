@@ -43,7 +43,7 @@ MAP = {
     '.': EMPTY,
 }
 
-class FFCA:
+class FFCA_wrap:
     """
     FFCA class, represents the FFCA model. It contains two static fields of
     type Grid. One for agents of type 1 and one for agents of type 2. It also
@@ -221,7 +221,7 @@ class FFCA:
 
 
     # TODO: fix the fact that we have multiple agents moving to the same position
-    
+
     def _solve_conflicts(self, positions_map):
         """
         Resolves conflicts where multiple agents want to move to the same position.
