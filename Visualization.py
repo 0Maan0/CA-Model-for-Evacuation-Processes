@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
-from FFCA import FFCA
+from FFCA_wrap import FFCA_wrap
 from Grid import Grid, Pos
 
 # global constants for the FFCA
@@ -16,41 +16,6 @@ grid_size = (20, 20)  # Grid dimensions
 num_agents = 30       # Number of agents
 num_steps = 50        # Number of steps in the simulation
 exit_position = (0, 10)  # Exit location
-
-# Initialize agent positions
-def initialize_agents(grid_size, num_agents):
-    agents = []
-    while len(agents) < num_agents:
-        x, y = np.random.randint(0, grid_size[0]), np.random.randint(0, grid_size[1])
-        if (x, y) not in agents and (x, y) != exit_position:
-            agents.append((x, y))
-    return agents
-
-# Move agents toward the exit
-def move_agents(agents, exit_position, grid_size):
-    new_agents = []
-    for x, y in agents:
-        dx = np.sign(exit_position[0] - x)
-        dy = np.sign(exit_position[1] - y)
-
-        # Randomize movement priority
-        if np.random.rand() > 0.5:
-            new_x, new_y = x + dx, y
-        else:
-            new_x, new_y = x, y + dy
-
-        # Ensure new positions are within bounds
-        new_x = max(0, min(grid_size[0] - 1, new_x))
-        new_y = max(0, min(grid_size[1] - 1, new_y))
-
-        # Add the new position if not already occupied
-        if (new_x, new_y) not in new_agents and (new_x, new_y) != exit_position:
-            new_agents.append((new_x, new_y))
-        else:
-            new_agents.append((x, y))
-
-    return new_agents
-
 
 # Visualisation of the grid and agent positions
 
@@ -82,7 +47,7 @@ def grid_to_image(grid: Grid) -> np.ndarray:
     
     return img
 
-def visualize_simulation(ffca: FFCA, steps: int, filename: str = 'simulation.gif', delay: float = 0.05):
+def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'simulation.gif', delay: float = 0.05):
     frames = []
     
     for i in range(steps):
@@ -101,9 +66,9 @@ def visualize_simulation(ffca: FFCA, steps: int, filename: str = 'simulation.gif
 
 if __name__ == "__main__":
     # Call the visualization function
-    ffca = FFCA(20, 100, 100, spawn_rate=0.025,
+    ffca = FFCA_wrap(20, 100, 100, spawn_rate=0.025,
                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
-                    static_field_strength=2.5, dynamic_field_strength=3,
+                    static_field_strength=2.5, dynamic_field_strength=5,
                     horizontal_bias=50)  # Adjust parameters as necessary
     visualize_simulation(ffca, 2000)  # Create GIF for 1000 steps
 
