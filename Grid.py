@@ -210,3 +210,17 @@ class Grid:
         for key in keys_to_remove:
             del self.grid[key]
         return self
+
+
+    def copy(self) -> 'Grid':
+        """
+        Creates and returns a deep copy of the Grid instance.
+        The copy includes the same grid data and boundaries.
+        """
+        copied_grid = Grid([[0]])
+        copied_grid.Rmin = self.Rmin
+        copied_grid.Rmax = self.Rmax
+        copied_grid.Cmin = self.Cmin
+        copied_grid.Cmax = self.Cmax
+        copied_grid.grid = self.grid.copy()
+        return copied_grid
