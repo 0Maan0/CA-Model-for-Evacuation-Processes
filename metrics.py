@@ -78,10 +78,23 @@ def agent_flux(agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_enter
 
     total_flux_agent_1 = np.sum(row_flux_agent_1)
     total_flux_agent_2 = np.sum(row_flux_agent_2)
+
+    amount_agent_1_leaving = np.sum(agent_1_leaving)
+    amount_agent_2_leaving = np.sum(agent_2_leaving)
     #print(f"Total flux of agent 1: {total_flux_agent_1}")
     #print(f"Total flux of agent 2: {total_flux_agent_2}")
 
-    return total_flux_agent_1, total_flux_agent_2
+    return total_flux_agent_1, total_flux_agent_2, amount_agent_1_leaving, amount_agent_2_leaving
+
+def detect_congestion(agent_1_leaving, agent_2_leaving):
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(len(agent_1_leaving)), agent_1_leaving, linestyle='-', color='tab:blue', label='Agent 1 Leaving')
+    plt.plot(range(len(agent_2_leaving)), agent_2_leaving, linestyle='-', color='tab:red', label='Agent 2 Leaving')
+    plt.xlabel("Iterations", fontsize=14)
+    plt.ylabel("Number of Agents Leaving", fontsize=14)
+    plt.legend()
+    plt.show()
+    plt.savefig("Figures/congestion.pdf")
 
 def plot_total_flux(total_fluxes_agent_1, total_fluxes_agent_2):
     #plot of how the flux changes over time at each iteration
@@ -99,62 +112,17 @@ def plot_total_flux(total_fluxes_agent_1, total_fluxes_agent_2):
     plt.tight_layout()
     plt.savefig("total_flux.pdf")
     plt.show()
-    return None
-
-def plot_dynamic_field_strength():
-    phi_dsf3 = np.loadtxt("simulation_results/phi_values_dfs3.0.csv", delimiter=",")
-    phi_dsf5 = np.loadtxt("simulation_results/phi_values_dfs5.0.csv", delimiter=",")
-    phi_dsf7 = np.loadtxt("simulation_results/phi_values_dfs7.0.csv", delimiter=",")
-    phi_dsf9 = np.loadtxt("simulation_results/phi_values_dfs9.0.csv", delimiter=",")
-    iterations = range(len(phi_dsf3))
-    print(phi_dsf3)
-    plt.figure(figsize=(10, 6))
-    plt.plot(iterations, phi_dsf3, linestyle='-', color='tab:blue', label='Dynamic Field Strength 3')
-    plt.plot(iterations, phi_dsf5, linestyle='-', color='tab:red', label='Dynamic Field Strength 5')
-    plt.plot(iterations, phi_dsf7, linestyle='-', color='tab:green', label='Dynamic Field Strength 7')
-    plt.plot(iterations, phi_dsf9, linestyle='-', color='tab:orange', label='Dynamic Field Strength 9')
-    plt.xlabel("Iterations", fontsize=14)
-    plt.ylabel("Order Parameter", fontsize=14)
-    plt.title("Order Parameter vs Iterations", fontsize=16)
-    plt.grid(True)
-    plt.legend()
-    plt.savefig("Figures/order_parameter_dynamic_field_strength.pdf")
-    plt.show()
-
-    flux_values_1_dfs3 = np.loadtxt("simulation_results/flux_values_1_dfs3.0.csv", delimiter=",")
-    flux_values_1_dfs5 = np.loadtxt("simulation_results/flux_values_1_dfs5.0.csv", delimiter=",")
-    flux_values_1_dfs7 = np.loadtxt("simulation_results/flux_values_1_dfs7.0.csv", delimiter=",")
-    flux_values_1_dfs9 = np.loadtxt("simulation_results/flux_values_1_dfs9.0.csv", delimiter=",")
-    flux_values_2_dfs3 = np.loadtxt("simulation_results/flux_values_2_dfs3.0.csv", delimiter=",")
-    flux_values_2_dfs5 = np.loadtxt("simulation_results/flux_values_2_dfs5.0.csv", delimiter=",")
-    flux_values_2_dfs7 = np.loadtxt("simulation_results/flux_values_2_dfs7.0.csv", delimiter=",")
-    flux_values_2_dfs9 = np.loadtxt("simulation_results/flux_values_2_dfs9.0.csv", delimiter=",")
-    plt.figure(figsize=(10, 6))
-    plt.plot(iterations, flux_values_1_dfs3, linestyle='-', color='tab:blue', label='Dynamic Field Strength 3, agent 1')
-    plt.plot(iterations, flux_values_1_dfs5, linestyle='-', color='tab:red', label='Dynamic Field Strength 5, agent 1')
-    plt.plot(iterations, flux_values_1_dfs7, linestyle='-', color='tab:green', label='Dynamic Field Strength 7, agent 1')
-    plt.plot(iterations, flux_values_1_dfs9, linestyle='-', color='tab:orange', label='Dynamic Field Strength 9, agent 1')
-    plt.plot(iterations, flux_values_2_dfs3, linestyle='--', color='tab:pink', label='Dynamic Field Strength 3, agent 2')
-    plt.plot(iterations, flux_values_2_dfs5, linestyle='--', color='tab:brown', label='Dynamic Field Strength 5, agent 2')
-    plt.plot(iterations, flux_values_2_dfs7, linestyle='--', color='tab:purple', label='Dynamic Field Strength 7, agent 2')
-    plt.plot(iterations, flux_values_2_dfs9, linestyle='--', color='tab:cyan', label='Dynamic Field Strength 9, agent 2')
-    plt.xlabel("Iterations", fontsize=14)
-    plt.ylabel("Flux", fontsize=14)
-    plt.title("Flux vs Iterations", fontsize=16)
-    plt.grid(True)
-    plt.legend()
-    plt.savefig("Figures/flux_dynamic_field_strength.pdf")
-    plt.show()
-
-    
+    return None    
 
 if __name__ == "__main__":
     #Open phi_values.csv file and plot the order parameter
-    #phi_values = np.loadtxt("Figures/phi_values.csv", delimiter=",")
-    #iterations = len(phi_values)
-    #plot_order_parameter(phi_values, iterations)
+    phi_values = np.loadtxt("simulation_results/phi_values_dfs5.csv", delimiter=",")
+    iterations = len(phi_values)
+    plot_order_parameter(phi_values, iterations)
     # Open flux_values_1.csv and flux_values_2.csv files and plot the total flux
-    #flux_values_1 = np.loadtxt("flux_values_1.csv", delimiter=",")
-    #flux_values_2 = np.loadtxt("flux_values_2.csv", delimiter=",")
-    #plot_total_flux(flux_values_1, flux_values_2)
-    plot_dynamic_field_strength()
+    flux_values_1 = np.loadtxt("simulation_results/flux_values_1_dfs5.csv", delimiter=",")
+    flux_values_2 = np.loadtxt("simulation_results/flux_values_2_dfs5.csv", delimiter=",")
+    plot_total_flux(flux_values_1, flux_values_2)
+    agent1 = np.loadtxt("simulation_results/agent_1_leaving_dfs5.csv", delimiter=",")
+    agent2 = np.loadtxt("simulation_results/agent_2_leaving_dfs5.csv", delimiter=",")
+    detect_congestion(agent1, agent2)
