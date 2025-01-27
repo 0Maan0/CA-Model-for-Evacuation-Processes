@@ -116,9 +116,24 @@ columns = [f"Density {density}" for density in density_values]
 df = pd.DataFrame(data, columns=columns)
 df.to_csv("order_parameter_vs_density.csv", index=False) """
 
-# All densities test
+
+# Lets run the simulation 10 times to get the standard deviation of the order parameter
+
+n_runs = 10
 densities = np.linspace(0.05, 0.25, 100)
 phi_values = []
+
+for n in range(n_runs):
+    phi_values.append([])
+    for density in densities:
+        Ntot = int(density * total_num_cells)
+        ffca = FFCA_wrap(number_rows, number_cols, Ntot, spawn_rate=0.025,
+                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
+                     static_field_strength=2.5, dynamic_field_strength=5,
+                     horizontal_bias=50)  
+        phi_values[n].append(lane_formation(number_rows, number_cols, Ntot, steps, ffca))
+
+
 
 for density in densities:
     Ntot = int(density * total_num_cells)
@@ -128,7 +143,7 @@ for density in densities:
                  horizontal_bias=50)  
     phi_list = lane_formation(number_rows, number_cols, Ntot, steps, ffca)
     # average of last 20 values
-    phi_values.append(np.mean(phi_list[-20:]))
+    phi_values.append(np.mean(phi_list[-100:]))
 
 # Make a plot with all density values (phi values vs density)
 plt.figure(figsize=(10, 6))
