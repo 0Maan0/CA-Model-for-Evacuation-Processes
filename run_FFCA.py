@@ -10,6 +10,7 @@ scenarios to see the visually see the FFCA interactions.
 # from FFCA_wrap import FFCA
 from FFCA import FFCA
 from FFCA_wrap import FFCA_wrap
+from FFCA_wrap import print_grid
 from Grid import Grid, Pos
 from metrics import order_parameter, mean_order_parameter, plot_order_parameter, agent_flux
 import time
@@ -117,12 +118,40 @@ def run():
     #plot_order_parameter(phi_values, steps)
 
 
+def debug_wrap():
+    # diagonal crash seems to go correct though
+    # left_agents = [(Pos(2, 4), 2)]
+    # right_agents = [(Pos(2, 1), 1), (Pos(1, 2), 1)]
+
+    # wrap around:
+    l = [(Pos(1, 2), 2)]
+    r = [(Pos(1, 3), 1)]
+
+    agents = l + r
+
+    ffca = FFCA_wrap(1, 4, 0, agents, verbose=False)
+    steps = 5
+    print_grid(ffca.structure)
+    for i in range(steps):
+        time.sleep(0.5)
+        ffca.step()
+        print_grid(ffca.structure)
+
+
+# use a bigger random grid to find the error situation
+def debug_wrap_2():
+    ffca = FFCA_wrap(10, 100, 100, spawn_rate=0, conflict_resolution_rate=0, verbose=False)
+    steps = 10000
+    ffca.show()
+    for i in range(steps):
+        ffca.step()
+        ffca.show()
+
+
 def main():
     # run()
-    run_wrap()
-    # run()
-    # test_collision()
-    # test_small()
+    # debug_wrap()
+    debug_wrap_2()
     pass
 
 
