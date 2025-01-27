@@ -57,7 +57,7 @@ class FFCA_wrap:
     def __init__(self, r, c, agent_count, agents_list=None, spawn_rate=0.025,
                  conflict_resolution_rate=0.5, alpha=0.3, delta=0.2,
                  static_field_strength=2.5, dynamic_field_strength=3.0,
-                 horizontal_bias=5000, verbose=False):
+                 horizontal_bias=1000, verbose=False):
         """
         Initialises the FFCA model with the given parameters.
         r: the amount of rows of the corridor, (int)
@@ -106,6 +106,10 @@ class FFCA_wrap:
 
         # verbose for debugging:
         self.verbose = verbose
+
+        # for validating correctness
+        self.initial_agent_count_1 = len(self.structure.findall(AGENT_1))
+        self.initial_agent_count_2 = len(self.structure.findall(AGENT_2))
 
     def init_agents(self, agent_count):
         """
@@ -159,8 +163,12 @@ class FFCA_wrap:
         # Step 3: Apply the resolved movements to the grid
         self._apply_movements(positions_map)
 
-        return positions_map
+        # validate that we haven't lost any agents:
+        no_agent1 = len(self.structure.findall(AGENT_1))
+        no_agent2 = len(self.structure.findall(AGENT_2))
+        assert no_agent1 == self.initial_agent_count_1 and no_agent2 == self.initial_agent_count_2, "Lost agents"
 
+        return positions_map
 
     def _generate_probabilities(self):
         """
@@ -240,9 +248,6 @@ class FFCA_wrap:
 
         return positions_map
 
-
-    # TODO: fix the fact that we have multiple agents moving to the same position
-
     def _solve_conflicts(self, positions_map):
         """
         Resolves conflicts where multiple agents want to move to the same position.
@@ -274,15 +279,11 @@ class FFCA_wrap:
                             positions_map[old_pos] = old_pos
 
         new_positions = list(positions_map.values())
-        # if not len(new_positions) == len(set(new_positions)):
-        #     # find which two agents have the same new position:
-        #     for opos, npos in positions_map.items():
-        #         if new_positions.count(npos) > 1:
-        #             print(f"Conflict at {opos} and {npos}")
+
+        # asserts that we have no agents moving to the same position
         assert len(new_positions) == len(set(new_positions)), "Agents are moving to the same position"
 
         return positions_map
-
 
     def _apply_movements(self, positions_map):
         """
@@ -427,6 +428,7 @@ class FFCA_wrap:
             N1.append(agent_counts[row][AGENT_1])
             N2.append(agent_counts[row][AGENT_2])
         return N1, N2
+
     def agents_at_exit(self, structure):
         """
         Determines in which rows agents are leaving or entering the grid.
@@ -465,7 +467,6 @@ class FFCA_wrap:
                     #self.structure[structure_pos] = OBSTACLE
                     agent_2_entering[structure_pos.r-1] += 1
         return agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_entering
-
 
 
 def string_to_ints(str):
@@ -514,3 +515,7 @@ def print_grid(grid):
             print(char, end='')
         print()
     print()
+
+# TODO: confirm that the amount of agents of type 1 and of type 2 stay the
+# same throughout the entire simulation (this confirms that the conflict
+# handling is working correctly)

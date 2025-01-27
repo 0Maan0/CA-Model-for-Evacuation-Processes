@@ -25,7 +25,6 @@ def test_collision():
     ffca.show()
     for i in range(steps):
         time.sleep(0.5)
-        # print(ffca.structure)
         ffca.step()
         ffca.show()
 
@@ -186,10 +185,27 @@ def debug_wrap():
 
 # use a bigger random grid to find the error situation
 def debug_wrap_2():
-    ffca = FFCA_wrap(10, 100, 100, spawn_rate=0, conflict_resolution_rate=0, verbose=False)
+    ffca = FFCA_wrap(30, 30, 100, spawn_rate=0, conflict_resolution_rate=0)
     steps = 10000
     ffca.show()
     for i in range(steps):
+        ffca.step()
+        ffca.show()
+
+def run_fun():
+    # generate one big collumn
+    rows = 30
+    cols = 30
+    y1 = 4
+    y2 = 27
+    l = [(Pos(r, c), 1) for r in range(1, rows + 1) for c in range(y1 - 2, y1 + 1, 2)]
+    r = [(Pos(r, c), 2) for r in range(1, rows + 1) for c in range(y2 - 2, y2 + 1, 2)]
+    agents = l + r
+    ffca = FFCA_wrap(rows, cols, 0, agents)
+    steps = 100
+    ffca.show()
+    for i in range(steps):
+        time.sleep(0.5)
         ffca.step()
         ffca.show()
 
@@ -197,13 +213,14 @@ def debug_wrap_2():
 def main():
     #  run()
     # run_wrap()
-    run_wrap_statistics()
+    # run_wrap_statistics()
     # run()
     # test_collision()
     # test_small()
     # run()
     # debug_wrap()
-    debug_wrap_2()
+    # debug_wrap_2()
+    run_fun()
     pass
 
 
