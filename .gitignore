@@ -219,3 +219,8 @@ fabric.properties
 # additional restrictions
 *.csv
 *.gif
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.svg
