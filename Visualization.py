@@ -41,7 +41,7 @@ def grid_to_image(grid: Grid) -> np.ndarray:
     
     return img
 
-def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'r30_c100_n100_kd3_hori_bias_5000.gif', delay: float = 0.05):
+def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'r30_c80_n80_kd3_hori_bias_5000.gif', delay: float = 0.05):
     frames = []
     
     for i in range(steps):
@@ -60,10 +60,10 @@ def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'r30_c100_
 
 if __name__ == "__main__":
     # Call the visualization function
-    ffca = FFCA_wrap(30, 100, 100, spawn_rate=0.025,
+    ffca = FFCA_wrap(30, 80, 80, spawn_rate=0.025,
                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
                     static_field_strength=2.5, dynamic_field_strength=3,
                     horizontal_bias=5000)  
-    visualize_simulation(ffca, 2000)  # Create GIF for 1000 steps
+    visualize_simulation(ffca, 1000)  # Create GIF for 1000 steps
 
 
