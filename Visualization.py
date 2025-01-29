@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 from FFCA_wrap import FFCA_wrap
 from Grid import Grid, Pos
+import imageio
+import cv2
 
 # global constants for the FFCA
 OBSTACLE = 1000
@@ -13,35 +15,28 @@ EMPTY = 3
 
 # Visualisation of the grid and agent positions
 
-import matplotlib.pyplot as plt
-import numpy as np
-import imageio
-
-def grid_to_image(grid: Grid) -> np.ndarray:
-    # Get the grid size
+def grid_to_image(grid: Grid, scale: int = 20) -> np.ndarray:
     rows = grid.Rmax + 2
     cols = grid.Cmax + 2
-    
-    # Create an empty image (matrix of zeros)
-    img = np.zeros((rows, cols, 3), dtype=np.uint8)  # RGB image
-    
-    # Define color mapping for agents and obstacles
+    img = np.zeros((rows, cols, 3), dtype=np.uint8)
+
     color_map = {
-        OBSTACLE: [0, 128, 131],  # dark green for walls
-        EXIT: [142, 197, 130],  # light green for exits
-        AGENT_1: [239, 127, 54],  # orange for agent 1
-        AGENT_2: [41, 114, 182],  # blue for agent 2
-        EMPTY: [255, 255, 255],  # white for empty cells
+        OBSTACLE: [0, 128, 131],
+        EXIT: [142, 197, 130],
+        AGENT_1: [239, 127, 54],
+        AGENT_2: [41, 114, 182],
+        EMPTY: [255, 255, 255],
     }
-    
-    # Iterate through the grid and assign colors
+
     for pos, value in grid.items():
         row, col = pos.r, pos.c
-        img[row, col] = color_map.get(value, [255, 255, 255])  # default to white for unknown values
-    
+        img[row, col] = color_map.get(value, [255, 255, 255])
+
+    # Resize the image using nearest neighbor interpolation to keep sharp edges
+    img = cv2.resize(img, (cols * scale, rows * scale), interpolation=cv2.INTER_NEAREST)
     return img
 
-def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'r30_c30_n60_kd3_hori_bias_5000.gif', delay: float = 0.05):
+def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'simulation.gif', delay: float = 0.05):
     frames = []
     
     for i in range(steps):
@@ -60,10 +55,10 @@ def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'r30_c30_n
 
 if __name__ == "__main__":
     # Call the visualization function
-    ffca = FFCA_wrap(30, 30, 60, spawn_rate=0.025,
+    ffca = FFCA_wrap(20, 50, 50, spawn_rate=0.025,
                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
                     static_field_strength=2.5, dynamic_field_strength=3,
-                    horizontal_bias=5000)  
+                    horizontal_bias=50)  
     visualize_simulation(ffca, 1000)  # Create GIF for 1000 steps
 
 

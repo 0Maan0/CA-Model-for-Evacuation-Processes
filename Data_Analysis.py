@@ -1,10 +1,11 @@
 from FFCA_wrap import FFCA_wrap
 from Grid import Grid, Pos
-from metrics import order_parameter, mean_order_parameter, plot_order_parameter
-import time
+from metrics import order_parameter, mean_order_parameter
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 
 
 def lane_formation(rows, cols, Ntot, steps, ffca):
@@ -26,22 +27,17 @@ def lane_formation(rows, cols, Ntot, steps, ffca):
     return phi_values
 
 
-steps = 500
+steps = 200
 number_agents = 50
 number_rows = 80
 number_cols = 20
 
-import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.cm as cm
-import matplotlib.colors as mcolors
-
 # Define horizontal bias values
 horizontal_bias_values = [1, 25, 50, 100, 250, 500, 1000, 5000]
 
-# Get the "Blues" colormap and use only the **darker range**
-cmap = plt.colormaps.get_cmap("Blues")  # Get the colormap
-new_cmap = mcolors.ListedColormap(cmap(np.linspace(0.4, 1, len(horizontal_bias_values))))  # Use only the dark half
+# Colourmap
+cmap = plt.colormaps.get_cmap("Blues")  
+new_cmap = mcolors.ListedColormap(cmap(np.linspace(0.4, 1, len(horizontal_bias_values))))  
 
 # Normalize to map values correctly
 norm = mcolors.Normalize(vmin=min(horizontal_bias_values), vmax=max(horizontal_bias_values))
@@ -71,7 +67,6 @@ sm.set_array([])
 cbar = plt.colorbar(sm, ax=ax)
 cbar.set_label("Horizontal Bias", fontsize=14)
 
-# Labels and formatting
 ax.set_xlabel("Iterations", fontsize=14)
 ax.set_ylabel("Lane Formation", fontsize=14)
 ax.set_title("Lane Formation vs Iterations", fontsize=16)
@@ -80,54 +75,12 @@ ax.legend()
 ax.tick_params(axis='both', labelsize=12)
 plt.tight_layout()
 plt.savefig("lane_formation_vs_horizontal_bias_dark_blues.pdf")
-plt.show()
-
-
-""" 
-# Control values are the values defined in the article
-
-# Different horizontal bias values 
-horizontal_bias = [1, 25, 50, 100, 250, 500, 1000, 5000]
-phi_lists = []
-for bias in horizontal_bias:
-    print(f"Horizontal Bias: {bias}")
-    ffca = FFCA_wrap(number_rows, number_cols, number_agents, spawn_rate=0.025,
-                 conflict_resolution_rate=0, alpha=0.3, delta=0.3,
-                 static_field_strength=2.5, dynamic_field_strength=3,
-                 horizontal_bias=bias)  
-    phi_lists.append(lane_formation(number_rows, number_cols, number_agents, steps, ffca))
-
-# Make a plot with all horizontal bias values (phi values vs iterations)
-
-plt.figure(figsize=(10, 6))
-for i, phi_values in enumerate(phi_lists):
-    plt.plot(range(steps), phi_values, linestyle='-', label=f'Horizontal Bias: {horizontal_bias[i]}')
-plt.xlabel("Iterations", fontsize=14)
-plt.ylabel("Lane formation", fontsize=14)
-plt.title("Lane formation vs Iterations", fontsize=16)
-plt.grid(True)
-plt.legend()
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-plt.tight_layout()
-plt.savefig("lane_formation_vs_horizontal_bias_3.pdf")
-plt.show()
-
-# Save values in a CSV file with horizontal bias as column headers
-data = np.array(phi_lists).T  # Transpose to align each bias as a column
-columns = [f"Horizontal Bias {bias}" for bias in horizontal_bias]
-
-# Create a DataFrame 
-df = pd.DataFrame(data, columns=columns)
-
-# Save the DataFrame to a CSV file
-df.to_csv("lane_formation_vs_horizontal_bias_3.csv", index=False)  """
-
+plt.show() 
 
 # Different density values
 total_num_cells = number_rows * number_cols
 
-""" density_values = [0.05, 0.1, 0.15, 0.2, 0.25]
+density_values = [0.05, 0.1, 0.15, 0.2, 0.25]
 number_agents_list = [int(density * total_num_cells) for density in density_values]
 
 phi_lists = []
@@ -155,17 +108,10 @@ plt.tight_layout()
 plt.savefig("lane_formatiom_vs_density.pdf")
 plt.show()
 
-# Save values in a CSV file with density as column headers
-data = np.array(phi_lists).T  # Transpose to align each density as a column
-columns = [f"Density {density}" for density in density_values]
-
-df2 = pd.DataFrame(data, columns=columns)
-df2.to_csv("lane_formation_vs_density.csv", index=False)  """
-
 
 # Lets run the simulation 10 times to get the standard deviation of the order parameter
 
-""" n_runs = 5
+n_runs = 10
 densities = np.linspace(0.05, 0.25, 10)
 phi_values = []
 
@@ -191,9 +137,8 @@ std_phi_values = np.std(phi_values, axis=0)
 # Make a plot with mean and standard deviation of the order parameter
 plt.figure(figsize=(10, 6))
 plt.plot(densities, mean_phi_values, linestyle='-', label='Mean Order Parameter')
-# do error bars
+# Do error bars with std
 plt.errorbar(densities, mean_phi_values, yerr=std_phi_values, fmt='o', label='Standard Deviation')
-#plt.fill_between(densities, mean_phi_values - std_phi_values, mean_phi_values + std_phi_values, alpha=0.3)
 plt.xlabel("Density", fontsize=14)
 plt.ylabel("Lane formation", fontsize=14)
 plt.title("Lane formation vs Density", fontsize=16)
@@ -205,13 +150,7 @@ plt.tight_layout()
 plt.savefig("ane_formatiom_vs_density_all_2.pdf")
 plt.show()
 
-# Save values in a CSV file
-data = np.vstack([densities, mean_phi_values, std_phi_values]).T
-columns = ['Density', 'Mean Order Parameter', 'Standard Deviation']
-df3 = pd.DataFrame(data, columns=columns)
-df3.to_csv("ane_formatiom_vs_density_all_2.csv", index=False)   """
-
-""" # Different conflict resolution rates
+# Different conflict resolution rates
 conflict_resolution_rates = [0, 0.25, 0.5, 0.75, 1]
 phi_lists = []
 
@@ -229,7 +168,7 @@ for i, phi_values in enumerate(phi_lists):
     plt.plot(range(steps), phi_values, linestyle='-', label=f'Conflict Resolution Rate: {conflict_resolution_rates[i]}')
 plt.xlabel("Iterations", fontsize=14)
 plt.ylabel("Lane formation", fontsize=14)
-plt.title("Lane formation vs Iterations", fontsize=16)
+plt.title("Lane formation vs Conflict Resolution Rate", fontsize=16)
 plt.grid(True)
 plt.legend()
 plt.xticks(fontsize=12)
@@ -238,49 +177,50 @@ plt.tight_layout()
 plt.savefig("oane_formation_vs_conflict_resolution_rate.pdf")
 plt.show()
 
-# Save values in a CSV file with conflict resolution rate as column headers
-data = np.array(phi_lists).T  # Transpose to align each rate as a column
-columns = [f"Conflict Resolution Rate {rate}" for rate in conflict_resolution_rates]
 
-df4 = pd.DataFrame(data, columns=columns)
-df4.to_csv("ane_formation_vs_conflict_resolution_rate.csv", index=False)  """
-
-
-""" # Different corridor widths
-rows = 100
-corridor_widths = [20, 40, 60, 80, 100]
+# Define corridor widths
+length = 100
+corridor_width = [20, 40, 60, 80, 100]
 phi_lists = []
 
-for width in corridor_widths:
-    print(f"Corridor Width: {width}")
-    number_agents = int(0.05 * rows * width)
-    print(f"Number of agents: {number_agents}")
-    ffca = FFCA_wrap(rows, width, number_agents, spawn_rate=0.025,
-                 conflict_resolution_rate=0, alpha=0.3, delta=0.3,
-                 static_field_strength=2.5, dynamic_field_strength=3,
-                 horizontal_bias=5000)  
-    phi_lists.append(lane_formation(rows, width, number_agents, steps, ffca))
+# Choose a colormap (e.g., "plasma" or "viridis")
+cmap = plt.colormaps.get_cmap("viridis")  
+norm = mcolors.Normalize(vmin=min(corridor_width), vmax=max(corridor_width))
 
-# Make a plot with all corridor widths (phi values vs iterations)
-plt.figure(figsize=(10, 6))
+# Run simulations
+for width in corridor_width:
+    print(f"Corridor Length: {length}")
+    number_agents = int(0.05 * width * length)
+    print(f"Number of agents: {number_agents}")
+    
+    ffca = FFCA_wrap(width, length, number_agents, spawn_rate=0.025,
+                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
+                     static_field_strength=2.5, dynamic_field_strength=3,
+                     horizontal_bias=5000)  
+    phi_lists.append(lane_formation(width, length, number_agents, steps, ffca))
+
+# Plot results
+fig, ax = plt.subplots(figsize=(10, 6))
+
 for i, phi_values in enumerate(phi_lists):
-    plt.plot(range(steps), phi_values, linestyle='-', label=f'Corridor Width: {corridor_widths[i]}')
-plt.xlabel("Iterations", fontsize=14)
-plt.ylabel("Lane formation", fontsize=14)
-plt.title("Lane formation vs Iterations", fontsize=16)
-plt.grid(True)
-plt.legend()
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
+    color = cmap(norm(corridor_width[i]))  # Assign color based on corridor width
+    ax.plot(range(steps), phi_values, linestyle='-', 
+            color=color, linewidth=2, alpha=0.8, 
+            label=f'Length: {corridor_width[i]}')
+
+# Add colorbar to indicate corridor width
+sm = cm.ScalarMappable(cmap=cmap, norm=norm)
+sm.set_array([])
+cbar = plt.colorbar(sm, ax=ax)  
+cbar.set_label("Corridor Length", fontsize=14)
+
+# Labels and formatting
+ax.set_xlabel("Iterations", fontsize=14)
+ax.set_ylabel("Lane Formation", fontsize=14)
+ax.set_title("Lane Formation vs Corridor Width", fontsize=16)
+ax.grid(True)
+ax.legend()
+ax.tick_params(axis='both', labelsize=12)
 plt.tight_layout()
 plt.savefig("lane_formation_vs_corridor_width.pdf")
-plt.show() """
-
-
-
-
-
-
-
-
-    
+plt.show() 
