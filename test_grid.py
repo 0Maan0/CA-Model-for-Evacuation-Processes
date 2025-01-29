@@ -6,7 +6,6 @@ IDs:            12714933, 15899039, 15830608
 Description:    This file contains the testing for the base classes used in the
 FFCA class. This FFCA class is based on the Grid class and the Pos class, so
 this class contains the testing for these base classes. This ensures correct
-
 """
 
 import unittest

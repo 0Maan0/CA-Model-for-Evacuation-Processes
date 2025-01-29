@@ -121,17 +121,17 @@ def run():
 def run_fun():
     # generate one big collumn
     rows = 30
-    cols = 30
+    cols = 50
     y1 = 4
     y2 = 27
     l = [(Pos(r, c), 1) for r in range(1, rows + 1) for c in range(y1 - 2, y1 + 1, 2)]
     r = [(Pos(r, c), 2) for r in range(1, rows + 1) for c in range(y2 - 2, y2 + 1, 2)]
     agents = l + r
     ffca = FFCA_wrap(rows, cols, 0, agents)
-    steps = 100
+    steps = 1000
     ffca.show()
     for i in range(steps):
-        time.sleep(0.5)
+        # time.sleep(0.5)
         ffca.step()
         ffca.show()
 
@@ -149,8 +149,8 @@ def run_wrap():
 def main():
     # run_wrap_statistics()
     # run()
-    run_wrap()
-    # run_fun()
+    # run_wrap()
+    run_fun()
     pass
 
 

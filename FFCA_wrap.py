@@ -314,29 +314,6 @@ class FFCA_wrap:
             structure_wrapped[Pos(r + 1, 0)] = self.structure[Pos(r + 1, self.structure.Cmax)]
         return structure_wrapped
 
-    def spawn_agents(self):
-        """
-        Spawns agents at the entrances of the grid. The agents are spawned in
-        the exit of the other type of agent. Agents also have a probability of
-        'beta' to spawn at the entrance.
-        """
-        entrances1 = self.static_field_2.findall(0)
-        for pos in entrances1:
-            # map to structure position and move one step into the field
-            structure_pos = pos + Pos(1, 1)
-            if self.structure[structure_pos] != EMPTY:
-                continue
-            if np.random.random() < self.beta:
-                self.structure[structure_pos] = AGENT_1
-
-        entrances2 = self.static_field_1.findall(0)
-        for pos in entrances2:
-            # map to structure position and move one step into the field
-            structure_pos = pos + Pos(1, -1)
-            if self.structure[structure_pos] != EMPTY:
-                continue
-            if np.random.random() < self.beta:
-                self.structure[structure_pos] = AGENT_2
 
     def init_dynamic_fields(self):
         """
@@ -387,7 +364,6 @@ class FFCA_wrap:
         self.dynamic_field_1 = self.update_dynamic_field(self.dynamic_field_1, moved_cells1, AGENT_1)
         self.dynamic_field_2 = self.update_dynamic_field(self.dynamic_field_2, moved_cells2, AGENT_2)
         self.structure_wrapped = self.get_wrapped_structure()
-        # self.spawn_agents()
 
     def show(self):
         """
@@ -507,7 +483,3 @@ def print_grid(grid):
             print(char, end='')
         print()
     print()
-
-# TODO: confirm that the amount of agents of type 1 and of type 2 stay the
-# same throughout the entire simulation (this confirms that the conflict
-# handling is working correctly)
