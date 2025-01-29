@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 from FFCA_wrap import FFCA_wrap
 from Grid import Grid, Pos
+import imageio
+import cv2
 
 # global constants for the FFCA
 OBSTACLE = 1000
@@ -12,12 +14,6 @@ AGENT_2 = 2
 EMPTY = 3
 
 # Visualisation of the grid and agent positions
-
-import matplotlib.pyplot as plt
-import numpy as np
-import imageio
-
-import cv2
 
 def grid_to_image(grid: Grid, scale: int = 20) -> np.ndarray:
     rows = grid.Rmax + 2
@@ -40,7 +36,7 @@ def grid_to_image(grid: Grid, scale: int = 20) -> np.ndarray:
     img = cv2.resize(img, (cols * scale, rows * scale), interpolation=cv2.INTER_NEAREST)
     return img
 
-def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'density_0.2.gif', delay: float = 1):
+def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'simulation.gif', delay: float = 0.05):
     frames = []
     
     for i in range(steps):
@@ -59,7 +55,7 @@ def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'density_0
 
 if __name__ == "__main__":
     # Call the visualization function
-    ffca = FFCA_wrap(22, 52, 50, spawn_rate=0.025,
+    ffca = FFCA_wrap(20, 50, 50, spawn_rate=0.025,
                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
                     static_field_strength=2.5, dynamic_field_strength=3,
                     horizontal_bias=50)  
