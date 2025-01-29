@@ -59,21 +59,10 @@ def agent_flow(agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_enter
     amount_agent_1_leaving: Net amount of agents of type 1 through the exits. (Int)
     amount_agent_2_leaving: Net amount of agents of type 2 through the exits. (Int)
     '''
-    nr_rows = len(agent_1_leaving)
-    row_flux_agent_1 = np.zeros(nr_rows)
-    row_flux_agent_2 = np.zeros(nr_rows)
+    total_flux_agent_1 = agent_1_entering - agent_1_leaving
+    total_flux_agent_2 = agent_2_entering - agent_2_leaving
 
-    for i in range(nr_rows):
-        row_flux_agent_1[i] = agent_1_entering[i] - agent_1_leaving[i]
-        row_flux_agent_2[i] = agent_2_entering[i] - agent_2_leaving[i]
-
-    total_flux_agent_1 = np.sum(row_flux_agent_1)
-    total_flux_agent_2 = np.sum(row_flux_agent_2)
-
-    amount_agent_1_leaving = np.sum(agent_1_leaving)
-    amount_agent_2_leaving = np.sum(agent_2_leaving)
-
-    return total_flux_agent_1, total_flux_agent_2, amount_agent_1_leaving, amount_agent_2_leaving
+    return total_flux_agent_1, total_flux_agent_2
 
 def congestion_metric(agent_1_leaving, agent_2_leaving, Ntot, Ncol, Nrows, iterations):
     """
