@@ -17,64 +17,6 @@ import time
 import numpy as np
 
 
-def test_collision():
-    # test agents
-    agents = [(Pos(1, 1), 1), (Pos(1, 4), 2)]
-    ffca = FFCA(2, 4, 0, agents)
-    steps = 10
-    ffca.show()
-    for i in range(steps):
-        time.sleep(0.5)
-        ffca.step()
-        ffca.show()
-
-
-def test_small():
-    cmax = 40
-    rmax = 3
-    r = 2
-    c = cmax
-    left_agents = [(Pos(r, 1 + 2 * i), 1) for i in range(1)]
-    right_agents = [(Pos(r, c - 2 * i), 2) for i in range(10)]
-    agents = left_agents + right_agents
-
-    ffca = FFCA(rmax, cmax, 0, agents)
-    steps = 300
-    ffca.show()
-    for i in range(steps):
-        time.sleep(0.5)
-        ffca.step()
-        ffca.show()
-
-
-def test_big():
-    ffca = FFCA(10, 100, 20, spawn_rate=0.06, conflict_resolution_rate=0,
-                dynamic_field_strength=10)
-    steps = 1000
-    ffca.show()
-    for i in range(steps):
-        time.sleep(0.5)
-        ffca.step()
-        ffca.show()
-
-
-def run_wrap():
-    cmax = 40
-    rmax = 3
-    r = 2
-    c = cmax
-    left_agents = [(Pos(r, 1 + 2 * i), 1) for i in range(1)]
-    right_agents = [(Pos(r, c - 2 * i), 2) for i in range(10)]
-    agents = left_agents + right_agents
-
-    ffca = FFCA_wrap(rmax, cmax, 0, agents)
-    steps = 300
-    ffca.show()
-    for i in range(steps):
-        time.sleep(0.5)
-        ffca.step()
-        ffca.show()
-
 def run_wrap_statistics():
     cmax = 30
     rmax = 30
@@ -134,6 +76,7 @@ def run_wrap_statistics():
     np.savetxt(f"simulation_results/phi_values_dfs{dfs}.csv", phi_values, delimiter=",")
 #plot_order_parameter(phi_values, steps)
 
+
 def run():
     Ntot = 50 # total number of agents
     steps = 2000 # number of steps in the simulation
@@ -175,35 +118,6 @@ def run():
     #plot_order_parameter(phi_values, steps)
 
 
-def debug_wrap():
-    # diagonal crash seems to go correct though
-    # left_agents = [(Pos(2, 4), 2)]
-    # right_agents = [(Pos(2, 1), 1), (Pos(1, 2), 1)]
-
-    # wrap around:
-    l = [(Pos(1, 2), 2)]
-    r = [(Pos(1, 3), 1)]
-
-    agents = l + r
-
-    ffca = FFCA_wrap(1, 4, 0, agents, verbose=False)
-    steps = 5
-    print_grid(ffca.structure)
-    for i in range(steps):
-        time.sleep(0.5)
-        ffca.step()
-        print_grid(ffca.structure)
-
-
-# use a bigger random grid to find the error situation
-def debug_wrap_2():
-    ffca = FFCA_wrap(30, 30, 100, spawn_rate=0, conflict_resolution_rate=0)
-    steps = 10000
-    ffca.show()
-    for i in range(steps):
-        ffca.step()
-        ffca.show()
-
 def run_fun():
     # generate one big collumn
     rows = 30
@@ -222,17 +136,21 @@ def run_fun():
         ffca.show()
 
 
+def run_wrap():
+    ffca = FFCA_wrap(25, 50, 25, spawn_rate=0, conflict_resolution_rate=0, horizontal_bias=5000,
+                     dynamic_field_strength=3)
+    steps = 1000
+    ffca.show()
+    for i in range(steps):
+        ffca.step()
+        ffca.show()
+
+
 def main():
-    #  run()
-    # run_wrap()
     # run_wrap_statistics()
     # run()
-    # test_collision()
-    # test_small()
-    # run()
-    # debug_wrap()
-    # debug_wrap_2()
-    run_fun()
+    run_wrap()
+    # run_fun()
     pass
 
 
