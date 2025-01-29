@@ -136,6 +136,7 @@ def run_wrap_statistics():
     np.savetxt(f"simulation_results/phi_values_dfs{dfs}.csv", phi_values, delimiter=",")
 #plot_order_parameter(phi_values, steps)
 
+
 def run():
     Ntot = 50 # total number of agents
     steps = 1000 # number of steps in the simulation
@@ -184,39 +185,10 @@ def run():
     #plot_order_parameter(phi_values, steps)
 
 
-def debug_wrap():
-    # diagonal crash seems to go correct though
-    # left_agents = [(Pos(2, 4), 2)]
-    # right_agents = [(Pos(2, 1), 1), (Pos(1, 2), 1)]
-
-    # wrap around:
-    l = [(Pos(1, 2), 2)]
-    r = [(Pos(1, 3), 1)]
-
-    agents = l + r
-
-    ffca = FFCA_wrap(1, 4, 0, agents, verbose=False)
-    steps = 5
-    print_grid(ffca.structure)
-    for i in range(steps):
-        time.sleep(0.5)
-        ffca.step()
-        print_grid(ffca.structure)
-
-
-# use a bigger random grid to find the error situation
-def debug_wrap_2():
-    ffca = FFCA_wrap(30, 30, 100, spawn_rate=0, conflict_resolution_rate=0)
-    steps = 10000
-    ffca.show()
-    for i in range(steps):
-        ffca.step()
-        ffca.show()
-
 def run_fun():
     # generate one big collumn
     rows = 30
-    cols = 30
+    cols = 50
     y1 = 4
     y2 = 27
     l = [(Pos(r, c), 1) for r in range(1, rows + 1) for c in range(y1 - 2, y1 + 1, 2)]
@@ -315,8 +287,6 @@ def run_all():
 
 
 def main():
-    #  run()
-    # run_wrap()
     # run_wrap_statistics()
     # run()
     # test_collision()
