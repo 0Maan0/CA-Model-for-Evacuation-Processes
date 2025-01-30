@@ -160,6 +160,10 @@ class FFCA_wrap:
 
         # Step 2: Solve conflicts between agents moving to the same position
         positions_map = self._solve_conflicts(positions_map)
+        self.positions_map_wrapped = positions_map
+
+        # update the positions map so that the agents that would move outside
+        # of the structure and therefore would wrap around to the other side
         positions_map = self.update_postions_map_wrap(positions_map)
         self.positions_map = positions_map
 
@@ -345,6 +349,8 @@ class FFCA_wrap:
         moved_cells: the list of original positions of the moved agents
             (List[Pos])
         """
+        # print('moved cells')
+        # print(moved_cells)
         for p in moved_cells:
             dynamic_field[p] += 1
 
@@ -368,8 +374,10 @@ class FFCA_wrap:
         """
         # extract moved agents
         positions_map = self.move_agents()
-        self.positions_map = positions_map
+
         moved_cells = [pos - Pos(1, 0) for pos, new_pos in positions_map.items() if pos != new_pos]
+        # print('both moved cells')
+        # print(moved_cells)
         moved_cells1 = [pos for pos in moved_cells if self.structure[pos] == AGENT_1]
         moved_cells2 = [pos for pos in moved_cells if self.structure[pos] == AGENT_2]
 
@@ -448,7 +456,6 @@ class FFCA_wrap:
         first_col = self.get_first_column()
         for pos in first_col:
             if self.structure[pos] == AGENT_1:
-                # assert pos in self.positions_map.keys(), "Agent is not moving"
                 # check in first column if agent1 just entered
                 if inverted_position_map[pos].c == self.structure.Cmax:
                     agent_1_entering += 1
@@ -463,6 +470,51 @@ class FFCA_wrap:
                     agent_2_entering += 1
 
         return agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_entering
+
+    def global_movement(self):
+        """
+        Determines the global movement direction of the agents. Forward moving
+        agents are counted as positive, backward moving agents are counted as
+        negative.
+        returns: the global movement direction of the agents (int)
+        """
+        global_movement_count = 0
+        for old_pos, new_pos in self.positions_map_wrapped.items():
+
+            assert self.structure_wrapped[new_pos] in [AGENT_1, AGENT_2], "Agent has not moved yet, run this function after step :)"
+            agent_type = self.structure_wrapped[new_pos]
+            if agent_type == AGENT_1:
+                # agent 1 moves 'forward'
+                if new_pos.c > old_pos.c:
+                    global_movement_count += 1
+                # agent 1 moves 'backwards'
+                elif new_pos.c < old_pos.c:
+                    global_movement_count -= 1
+            elif agent_type == AGENT_2:
+                # agent 2 movees 'forwards'
+                if new_pos.c < old_pos.c:
+                    global_movement_count += 1
+                # agent 2 moves 'backwards'
+                elif new_pos.c > old_pos.c:
+                    global_movement_count -= 1
+
+        return global_movement_count
+
+    def get_amount_agents_not_moved_forward(self):
+        """
+        Determines the amount of agents that have not moved in the current
+        iteration.
+        returns: the amount of agents that have not moved (int)
+        """
+        not_moved_forward = 0
+        for old_pos, new_pos in self.positions_map.items():
+            agent_type = self.structure_wrapped(new_pos)
+            if agent_type == AGENT_1 and new_pos.c >= old_pos.c:
+                not_moved_forward += 1
+            elif agent_type == AGENT_2 and new_pos.c <= old_pos.c:
+                not_moved_forward += 1
+
+        return not_moved_forward
 
 
 def string_to_ints(str):
@@ -509,5 +561,16 @@ def print_grid(grid):
             val = grid[pos]
             char = MAP_TO_STRING.get(val, '?')
             print(char, end='')
+        print()
+    print()
+
+
+def print_field(grid: Grid) -> None:
+    rmin, rmax, cmin, cmax = get_bounds(grid)
+    for r in range(rmin, rmax + 1):
+        for c in range(cmin, cmax + 1):
+            pos = Pos(r, c)
+            val = grid[pos]
+            print(f'{val:.2f}', end=' ')
         print()
     print()
