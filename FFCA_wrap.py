@@ -43,9 +43,7 @@ MAP = {
     '.': EMPTY,
 }
 
-# we want to print the new positions for all the agents in the step function
-# and we also want to print the probabilities for all the agents in the step function
-# if we have verbose on that is
+
 class FFCA_wrap:
     """
     FFCA class, represents the FFCA model. It contains two static fields of
@@ -111,6 +109,9 @@ class FFCA_wrap:
         self.initial_agent_count_1 = len(self.structure.findall(AGENT_1))
         self.initial_agent_count_2 = len(self.structure.findall(AGENT_2))
 
+        # positions map to detect movement per iteration
+        self.positions_map = None
+
     def init_agents(self, agent_count):
         """
         Initialises the agents on the grid. 'agent_count' agents of both kinds
@@ -159,6 +160,12 @@ class FFCA_wrap:
 
         # Step 2: Solve conflicts between agents moving to the same position
         positions_map = self._solve_conflicts(positions_map)
+        self.positions_map_wrapped = positions_map
+
+        # update the positions map so that the agents that would move outside
+        # of the structure and therefore would wrap around to the other side
+        positions_map = self.update_postions_map_wrap(positions_map)
+        self.positions_map = positions_map
 
         # Step 3: Apply the resolved movements to the grid
         self._apply_movements(positions_map)
@@ -181,11 +188,12 @@ class FFCA_wrap:
         positions_map = {}
 
         for pos, val in self.structure.items():
-            ps = [[0 for _ in range(3)] for _ in range(3)]
 
             # Only consider agents
             if val not in [AGENT_1, AGENT_2]:
                 continue
+
+            ps = [[0 for _ in range(3)] for _ in range(3)]
 
             # Loop over neighbors (Moore neighborhood)
             for dr in range(-1, 2):
@@ -231,7 +239,7 @@ class FFCA_wrap:
                     [pos + Pos(dr, dc) for dr in range(-1, 2) for dc in range(-1, 2)],
                     p=[p for row in ps for p in row]
                 )
-                positions_map[pos] = new_pos
+            positions_map[pos] = new_pos
 
         if self.verbose:
             print('probabilities:')
@@ -285,6 +293,22 @@ class FFCA_wrap:
 
         return positions_map
 
+    def update_postions_map_wrap(self, positions_map):
+        """
+        This function updates the positions_map so that the agents that would
+        move outside of the structure and therefore would wrap around to the
+        other side, actually have the wrapped position rather than the 'outside'
+        position
+        positions_map: the mapping of old positions to new positions (dict)
+        returns: the updated mapping of old positions to new positions (dict)
+        """
+        for pos, new_pos in positions_map.items():
+            if new_pos.c == self.structure.Cmax + 1:
+                positions_map[pos] = Pos(new_pos.r, 1)
+            elif new_pos.c == 0:
+                positions_map[pos] = Pos(new_pos.r, self.structure.Cmax)
+        return positions_map
+
     def _apply_movements(self, positions_map):
         """
         Applies the resolved movements to the grid.
@@ -293,14 +317,6 @@ class FFCA_wrap:
         for old_pos, new_pos in positions_map.items():
             if old_pos == new_pos:
                 continue
-            # if agent on exit, we move it to the other side: next to the exit
-            # on the other side
-            if new_pos.c == self.structure.Cmax + 1:
-                self.structure[Pos(new_pos.r, 1)] = self.structure[old_pos]
-                self.structure[old_pos] = EMPTY
-            elif new_pos.c == 0:
-                self.structure[Pos(new_pos.r, self.structure.Cmax)] = self.structure[old_pos]
-                self.structure[old_pos] = EMPTY
             else:
                 self.structure[new_pos] = self.structure[old_pos]
                 self.structure[old_pos] = EMPTY
@@ -355,10 +371,13 @@ class FFCA_wrap:
         and the dynamic field and spawn new agents.
         """
         # extract moved agents
-        position_map = self.move_agents()
-        moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
-        moved_cells1 = [pos for pos in moved_cells if self.structure[pos] == AGENT_1]
-        moved_cells2 = [pos for pos in moved_cells if self.structure[pos] == AGENT_2]
+        positions_map = self.move_agents()
+
+        # take the new pos since this is the position
+        moved_cells = {new_pos - Pos(1, 0): new_pos for pos, new_pos in positions_map.items() if pos != new_pos}
+
+        moved_cells1 = [pos for pos, new_pos in moved_cells.items() if self.structure[new_pos] == AGENT_1]
+        moved_cells2 = [pos for pos, new_pos in moved_cells.items() if self.structure[new_pos] == AGENT_2]
 
         # update both dynamic fields
         self.dynamic_field_1 = self.update_dynamic_field(self.dynamic_field_1, moved_cells1, AGENT_1)
@@ -405,36 +424,102 @@ class FFCA_wrap:
             N2.append(agent_counts[row][AGENT_2])
         return N1, N2
 
-    def agents_at_exit(self, structure):
+    def get_column(self, c):
+        assert Pos(1, c) in self.structure and self.structure[Pos(1, c)] != OBSTACLE, "Column does not exist"
+        return [Pos(r, c) for r in range(1, self.structure.Rmax + 1)]
+
+    def get_last_column(self):
+        return self.get_column(self.structure.Cmax)
+
+    def get_first_column(self):
+        return self.get_column(1)
+
+    def agents_at_exit(self):
         """
-        Determines in which rows agents are leaving or entering the grid.
+        Determines the amount of agents enering and leaving
+        returns: the amount of agents entering and leaving
+            (Tuple[List[int], List[int], List[int], List[int]])
         """
-        agent_1_leaving = np.zeros(structure.Rmax)
-        agent_2_leaving = np.zeros(structure.Rmax)
-        agent_1_entering = np.zeros(structure.Rmax)
-        agent_2_entering = np.zeros(structure.Rmax)
+        # 1 goes --->
+        # 2 goes <---
+        agent_1_leaving = 0
+        agent_2_leaving = 0
+        agent_1_entering = 0
+        agent_2_entering = 0
 
-        left_exits = self.static_field_2.findall(0)
-        for pos in left_exits:
-            # Determine if an agent is at the left exit
-            structure_pos = pos + Pos(1, 1)
-            if self.structure[structure_pos] != EMPTY:
-                if self.structure[structure_pos] == AGENT_1:
-                    agent_1_entering[structure_pos.r-1] += 1
+        # invertion is needed since positions map maps from old pos to cur pos
+        # and we want to see in cur iteration where the agent came from
+        inverted_position_map = {v: k for k, v in self.positions_map.items()}
 
-                elif self.structure[structure_pos] == AGENT_2:
-                    agent_2_leaving[structure_pos.r-1] += 1
+        first_col = self.get_first_column()
+        for pos in first_col:
+            if self.structure[pos] == AGENT_1:
+                # check in first column if agent1 just entered
+                if inverted_position_map[pos].c == self.structure.Cmax:
+                    agent_1_entering += 1
+                    agent_1_leaving += 1
 
-        right_exits = self.static_field_1.findall(0)
-        for pos in right_exits:
-            # Determine if an agent is at the right exit
-            structure_pos = pos + Pos(1, -1)
-            if self.structure[structure_pos] != EMPTY:
-                if self.structure[structure_pos] == AGENT_1:
-                    agent_1_leaving[structure_pos.r-1] += 1
-                elif self.structure[structure_pos] == AGENT_2:
-                    agent_2_entering[structure_pos.r-1] += 1
+        last_col = self.get_last_column()
+        for pos in last_col:
+            if self.structure[pos] == AGENT_2:
+                # check in last column if agent1 just entered
+                if inverted_position_map[pos].c == 1:
+                    agent_2_leaving += 1
+                    agent_2_entering += 1
+
         return agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_entering
+
+    def global_movement(self):
+        """
+        Determines the global movement direction of the agents. Forward moving
+        agents are counted as positive, backward moving agents are counted as
+        negative.
+        returns: the global movement direction of the agents (int)
+        """
+        global_movement_count = 0
+        for old_pos, new_pos in self.positions_map_wrapped.items():
+
+            # ensures proper use of the global_movement function, needs to be
+            # called after the step function
+            assert self.structure_wrapped[new_pos] in [AGENT_1, AGENT_2], "Agent has not moved yet, run this function after step :)"
+            agent_type = self.structure_wrapped[new_pos]
+            if agent_type == AGENT_1:
+                # agent 1 moves 'forward'
+                if new_pos.c > old_pos.c:
+                    global_movement_count += 1
+                # agent 1 moves 'backwards'
+                elif new_pos.c < old_pos.c:
+                    global_movement_count -= 1
+            elif agent_type == AGENT_2:
+                # agent 2 movees 'forwards'
+                if new_pos.c < old_pos.c:
+                    global_movement_count += 1
+                # agent 2 moves 'backwards'
+                elif new_pos.c > old_pos.c:
+                    global_movement_count -= 1
+
+        return global_movement_count
+
+    def get_amount_agents_not_moved_forward(self):
+        """
+        Determines the amount of agents that have not moved in the current
+        iteration.
+        returns: the amount of agents that have not moved (int)
+        """
+        not_moved_forward = 0
+        for old_pos, new_pos in self.positions_map.items():
+            agent_type = self.structure_wrapped[new_pos]
+            if agent_type == AGENT_1 and new_pos.c < old_pos.c:
+                not_moved_forward += 1
+            elif agent_type == AGENT_2 and new_pos.c > old_pos.c:
+                not_moved_forward += 1
+
+        # ensures we don't have more agents not moving that the total amount
+        # of agents in the grid
+        assert not_moved_forward <= len(self.structure.findall(AGENT_1)) + \
+               len(self.structure.findall(AGENT_2)), "more agents not moved than agents in the grid"
+
+        return not_moved_forward
 
 
 def string_to_ints(str):
@@ -481,5 +566,16 @@ def print_grid(grid):
             val = grid[pos]
             char = MAP_TO_STRING.get(val, '?')
             print(char, end='')
+        print()
+    print()
+
+
+def print_field(grid: Grid) -> None:
+    rmin, rmax, cmin, cmax = get_bounds(grid)
+    for r in range(rmin, rmax + 1):
+        for c in range(cmin, cmax + 1):
+            pos = Pos(r, c)
+            val = grid[pos]
+            print(f'{val:.2f}', end=' ')
         print()
     print()
