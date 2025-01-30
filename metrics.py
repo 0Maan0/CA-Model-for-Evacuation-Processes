@@ -49,15 +49,13 @@ def agent_flow(agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_enter
     '''
     This function calculates the flow of agents in the system.
     Input: 
-    agent_1_leaving: Row names where agents of type 1 are leaving the system (Array)
-    agent_2_leaving: Row names where agents of type 2 are leaving the system (Array)
-    agent_1_entering: Row names where agents of type 1 are entering the system (Array)
-    agent_2_entering: Row names where agents of type 2 are entering the system (Array)
+    agent_1_leaving: Number of agents of type 1 leaving the system (Int)
+    agent_2_leaving: Number of agents of type 2 leaving the system (Int)
+    agent_1_entering: Number of agents of type 1 entering the system (Int)
+    agent_2_entering: Number of agents of type 2 entering the system (Int)
     Returns:
     total_flux_agent_1: Net flow of agents of type 1 through the exits. (Int)
     total_flux_agent_2: Net flow of agents of type 2 through the exits. (Int)
-    amount_agent_1_leaving: Net amount of agents of type 1 through the exits. (Int)
-    amount_agent_2_leaving: Net amount of agents of type 2 through the exits. (Int)
     '''
     total_flux_agent_1 = agent_1_entering - agent_1_leaving
     total_flux_agent_2 = agent_2_entering - agent_2_leaving
@@ -75,7 +73,7 @@ def congestion_metric(agent_1_leaving, agent_2_leaving, Ntot, Ncol, Nrows, itera
     Nrows: Amount of rows in grid. (Int)
     iterations: Number of iterations. (Int)
     Returns:
-    flux (Float)
+    Flux: velocity * density (Float)
     """
     total1 = np.sum(agent_1_leaving)
     total2 = np.sum(agent_2_leaving)
@@ -102,7 +100,6 @@ def plot_congestion_and_flux(agent_1_leaving, agent_2_leaving, total_fluxes_agen
     ax[1].set_ylabel("Total Flux of agents", fontsize=14)
 
     ax[1].grid(True)
-
     plt.tight_layout()
     plt.savefig("Figures/congestion_flux_subplot.pdf")
     plt.show()
