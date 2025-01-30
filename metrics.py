@@ -62,12 +62,11 @@ def agent_flow(agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_enter
 
     return total_flux_agent_1, total_flux_agent_2
 
-def congestion_metric(agent_1_leaving, agent_2_leaving, Ntot, Ncol, Nrows, iterations):
+def flux(net_flow, Ntot, Ncols, Nrows, iterations):
     """
     This function determines the flux of agents of type 1 and type 2.
     Input:
-    agent_1_leaving: Number of agents of type 1 leaving the system (Int)
-    agent_2_leaving: Number of agents of type 2 leaving the system (Int)
+    net_flow: Net forward flow of agents per iteration. (Int)
     Ntot: Total amount of agents. (Int)
     Ncol: Amount of columns in grid. (Int)
     Nrows: Amount of rows in grid. (Int)
@@ -75,11 +74,25 @@ def congestion_metric(agent_1_leaving, agent_2_leaving, Ntot, Ncol, Nrows, itera
     Returns:
     Flux: velocity * density (Float)
     """
-    velocity = ( agent_1_leaving + agent_2_leaving) 
-    density = Ntot / (Ncol * Nrows)
+    velocity = net_flow / Ncols
+    density = Ntot / (Ncols * Nrows)
     return velocity * density
 
+def congestion_indec(Ntot, congested_agents):
+    """	
+    This function calculates the congestion index of the system.
+    Input:
+    Ntot: Total amount of agents. (Int)
+    congested_agents: Amount of congested agents. (Int)
+    Returns:
+    congestion_index: The congestion index of the system per iteration. (Float)
+    """
+    return congested_agents / Ntot
+
 def plot_congestion_and_flux(agent_1_leaving, agent_2_leaving, total_fluxes_agent_1, total_fluxes_agent_2):
+    """
+    This function plots the amount of agents leaving at the exits per itaand the total flux of agents in the system.
+    """
     iterations = len(agent_1_leaving)
     fig, ax = plt.subplots(2, 1, figsize=(10, 10), sharex=True)
 
@@ -108,7 +121,7 @@ def plot_congestion_flux(densities):
         flux_values[i] = np.mean(np.loadtxt(f"simulation_results/congestion_flux_d{density}.csv", delimiter=","))
     print(flux_values)
     plt.figure(figsize=(10, 6))
-    plt.plot(densities, flux_values, linestyle='-', marker='o', color='#ef7f36')
+    plt.plot(densities, flux_values, linestyle='-', marker='o', color='#008083')
     plt.xlabel("Density", fontsize=14)
     plt.ylabel("Total Flux", fontsize=14)
     plt.title("Total Flux vs Iterations", fontsize=16)
@@ -120,9 +133,26 @@ def plot_congestion_flux(densities):
     plt.savefig("Figures/total_flux.pdf")
     plt.show()
 
+def plot_congestion_index(densities):
+    congestion_values = np.zeros(len(densities))
+    for i, density in enumerate(densities):
+        congestion_values[i] = np.mean(np.loadtxt(f"simulation_results/congestion_index_d{density}.csv", delimiter=","))
+    plt.figure(figsize=(10, 6))
+    plt.plot(densities, congestion_values, linestyle='-', marker='o', color='#008083')
+    plt.xlabel("Density", fontsize=14)
+    plt.ylabel("Congestion Index", fontsize=14)
+    plt.title("Congestion Index", fontsize=16)
+    plt.grid(True)
+    plt.legend()
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.tight_layout()
+    plt.savefig("Figures/congestion_index.pdf")
+    plt.show()
+
 if __name__ == "__main__":
 
-    densities = np.linspace(0.03, 0.25, 5)
+    densities = np.linspace(0.05, 0.35, 15)
     plot_congestion_flux(densities)
 
     # # Open flux_values_1.csv and flux_values_2.csv files and plot the total flux
