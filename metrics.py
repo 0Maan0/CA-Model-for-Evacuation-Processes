@@ -87,7 +87,7 @@ def congestion_index(Ntot, congested_agents):
     Returns:
     congestion_index: The congestion index of the system per iteration. (Float)
     """
-    return congested_agents / Ntot / 2 # Divide by 2 because there are two types of agents
+    return congested_agents / Ntot 
 
 def plot_congestion_and_flux(agent_1_leaving, agent_2_leaving, total_fluxes_agent_1, total_fluxes_agent_2):
     """
@@ -153,7 +153,7 @@ def plot_congestion_index(densities):
 
 if __name__ == "__main__":
 
-    densities = np.linspace(0.05, 0.3 , 4)
+    densities = np.linspace(0.05, 0.45, 15)
     plot_congestion_flux(densities)
     plot_congestion_index(densities)
 
