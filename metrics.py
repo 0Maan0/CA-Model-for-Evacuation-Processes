@@ -48,19 +48,11 @@ def mean_order_parameter(phi, phi0):
 def agent_flow(agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_entering):
     '''
     This function calculates the flow of agents in the system.
-<<<<<<< HEAD
     Input: 
     agent_1_leaving: Number of agents of type 1 leaving the system (Int)
     agent_2_leaving: Number of agents of type 2 leaving the system (Int)
     agent_1_entering: Number of agents of type 1 entering the system (Int)
     agent_2_entering: Number of agents of type 2 entering the system (Int)
-=======
-    Input:
-    agent_1_leaving: Row names where agents of type 1 are leaving the system (Array)
-    agent_2_leaving: Row names where agents of type 2 are leaving the system (Array)
-    agent_1_entering: Row names where agents of type 1 are entering the system (Array)
-    agent_2_entering: Row names where agents of type 2 are entering the system (Array)
->>>>>>> 6c794e858b934a07e792264b4896057636e90f82
     Returns:
     total_flux_agent_1: Net flow of agents of type 1 through the exits. (Int)
     total_flux_agent_2: Net flow of agents of type 2 through the exits. (Int)
@@ -74,19 +66,16 @@ def congestion_metric(agent_1_leaving, agent_2_leaving, Ntot, Ncol, Nrows, itera
     """
     This function determines the flux of agents of type 1 and type 2.
     Input:
-    agent_1_leaving: Amount of agents of type 1 leaving each row. (Array)
-    agent_2_leaving Amount of agents of type 2 leaving each row. (Array)
-    Ntot: Tota amount of agents. (Int)
+    agent_1_leaving: Number of agents of type 1 leaving the system (Int)
+    agent_2_leaving: Number of agents of type 2 leaving the system (Int)
+    Ntot: Total amount of agents. (Int)
     Ncol: Amount of columns in grid. (Int)
     Nrows: Amount of rows in grid. (Int)
     iterations: Number of iterations. (Int)
     Returns:
     Flux: velocity * density (Float)
     """
-    total1 = np.sum(agent_1_leaving)
-    total2 = np.sum(agent_2_leaving)
-    total_normalised_flow = ( total1 + total2 ) / Ntot
-    velocity = total_normalised_flow * Ncol
+    velocity = ( agent_1_leaving + agent_2_leaving) 
     density = Ntot / (Ncol * Nrows)
     return velocity * density
 
@@ -117,8 +106,9 @@ def plot_congestion_flux(densities):
     flux_values = np.zeros(len(densities))
     for i, density in enumerate(densities):
         flux_values[i] = np.mean(np.loadtxt(f"simulation_results/congestion_flux_d{density}.csv", delimiter=","))
+    print(flux_values)
     plt.figure(figsize=(10, 6))
-    plt.plot(densities, flux_values, linestyle='-')
+    plt.plot(densities, flux_values, linestyle='-', marker='o', color='#ef7f36')
     plt.xlabel("Density", fontsize=14)
     plt.ylabel("Total Flux", fontsize=14)
     plt.title("Total Flux vs Iterations", fontsize=16)
@@ -132,7 +122,7 @@ def plot_congestion_flux(densities):
 
 if __name__ == "__main__":
 
-    densities = np.linspace(0.1, 0.25, 5)
+    densities = np.linspace(0.03, 0.25, 5)
     plot_congestion_flux(densities)
 
     # # Open flux_values_1.csv and flux_values_2.csv files and plot the total flux

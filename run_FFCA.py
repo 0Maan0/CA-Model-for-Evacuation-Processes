@@ -203,7 +203,7 @@ def run_fun():
         ffca.show()
 
 def run_all():
-    densities = np.linspace(0.1, 0.25, 5)
+    densities = np.linspace(0.05, 0.35, 15)
     cmax = 50
     rmax = 25
     for density in densities:
@@ -231,7 +231,7 @@ def run_all():
                         conflict_resolution_rate=0, alpha=0.3, delta=0.3,
                         static_field_strength=2.5, dynamic_field_strength=3,
                         horizontal_bias=5000)
-        steps = 100
+        steps = 600
         #visualize_simulation(ffca, 1000)
         phi_values = np.zeros(steps)
         flux_values_1 = np.zeros(steps)
@@ -272,7 +272,7 @@ def run_all():
             phi_values[i] = current_mean_phi
 
             congestion_flux[i] = congestion_metric(ffca.agents_at_exit()[2], ffca.agents_at_exit()[3], Ntot, cmax, rmax, steps)
-        filename = f"Figures/gif{density}.gif"
+        filename = f"gifs/gif{density}.gif"
         imageio.mimsave(filename, frames)
         print(f"GIF saved as {filename}")
         # save 2 arrays in csv file
