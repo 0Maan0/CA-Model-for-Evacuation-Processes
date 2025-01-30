@@ -27,12 +27,12 @@ def lane_formation(rows, cols, Ntot, steps, ffca):
     return phi_values
 
 
-steps = 200
+steps = 2000
 number_agents = 50
 number_rows = 80
 number_cols = 20
 
-# Define horizontal bias values
+""" # Define horizontal bias values
 horizontal_bias_values = [1, 25, 50, 100, 250, 500, 1000, 5000]
 
 # Colourmap
@@ -223,4 +223,51 @@ ax.legend()
 ax.tick_params(axis='both', labelsize=12)
 plt.tight_layout()
 plt.savefig("lane_formation_vs_corridor_width.pdf")
+plt.show()  """
+
+# Define corridor lengths
+width = 20
+corridor_length = [20, 40, 60, 80, 100]
+phi_lists = []
+
+# Choose a colormap (e.g., "plasma" or "viridis")
+cmap = plt.colormaps.get_cmap("viridis")
+norm = mcolors.Normalize(vmin=min(corridor_length), vmax=max(corridor_length))
+
+# Run simulations
+for length in corridor_length:
+    print(f"Corridor Length: {length}")
+    number_agents = int(0.05 * width * length)
+    print(f"Number of agents: {number_agents}")
+
+    ffca = FFCA_wrap(width, length, number_agents, spawn_rate=0.025,
+                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
+                     static_field_strength=2.5, dynamic_field_strength=3,
+                     horizontal_bias=5000)
+    phi_lists.append(lane_formation(width, length, number_agents, steps, ffca))
+
+# Plot results
+fig, ax = plt.subplots(figsize=(10, 6))
+
+for i, phi_values in enumerate(phi_lists):
+    color = cmap(norm(corridor_length[i]))  # Assign color based on corridor width
+    ax.plot(range(steps), phi_values, linestyle='-', 
+            color=color, linewidth=2, alpha=0.8, 
+            label=f'Length: {corridor_length[i]}')
+
+# Add colorbar to indicate corridor width
+sm = cm.ScalarMappable(cmap=cmap, norm=norm)
+sm.set_array([])
+cbar = plt.colorbar(sm, ax=ax)  
+cbar.set_label("Corridor Length", fontsize=14)
+
+# Labels and formatting
+ax.set_xlabel("Iterations", fontsize=14)
+ax.set_ylabel("Lane Formation", fontsize=14)
+ax.set_title("Lane Formation vs Corridor Length", fontsize=16)
+ax.grid(True)
+ax.legend()
+ax.tick_params(axis='both', labelsize=12)
+plt.tight_layout()
+plt.savefig("lane_formation_vs_corridor_length.pdf")
 plt.show() 
