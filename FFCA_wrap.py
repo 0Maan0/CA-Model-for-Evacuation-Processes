@@ -509,9 +509,9 @@ class FFCA_wrap:
         not_moved_forward = 0
         for old_pos, new_pos in self.positions_map.items():
             agent_type = self.structure_wrapped[new_pos]
-            if agent_type == AGENT_1 and new_pos.c >= old_pos.c:
+            if agent_type == AGENT_1 and new_pos.c < old_pos.c:
                 not_moved_forward += 1
-            elif agent_type == AGENT_2 and new_pos.c <= old_pos.c:
+            elif agent_type == AGENT_2 and new_pos.c > old_pos.c:
                 not_moved_forward += 1
 
         # ensures we don't have more agents not moving that the total amount
