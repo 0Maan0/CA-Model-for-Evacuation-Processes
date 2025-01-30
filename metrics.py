@@ -117,18 +117,22 @@ def plot_congestion_and_flux(agent_1_leaving, agent_2_leaving, total_fluxes_agen
 
 def plot_congestion_flux(densities):
     flux_values = np.zeros(len(densities))
+    std_values = np.zeros(len(densities))
     for i, density in enumerate(densities):
+        if i == 12:
+            print(np.loadtxt(f"simulation_results/congestion_flux_d{density}.csv", delimiter=","))
         flux_values[i] = np.mean(np.loadtxt(f"simulation_results/congestion_flux_d{density}.csv", delimiter=","))
-    print(flux_values)
     plt.figure(figsize=(10, 6))
-    plt.plot(densities, flux_values, linestyle='-', marker='o', color='#008083')
+    plt.scatter(densities[np.argmax(flux_values)], np.max(flux_values), color='#ef7f36', label=f'Critical density = {np.round(densities[np.argmax(flux_values)],2)}', zorder=2)
+    plt.plot(densities, flux_values, linestyle='-', marker='o', color='#008083', zorder=1)
     plt.xlabel("Density", fontsize=14)
-    plt.ylabel("Total Flux", fontsize=14)
-    plt.title("Total Flux vs Iterations", fontsize=16)
+    plt.ylabel("Mean Flux", fontsize=14)
+    plt.title("Mean flux of agents for varying density", fontsize=16)
     plt.grid(True)
-    plt.legend()
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
+    plt.xlim([0.01, 0.45])
+    plt.legend(fontsize=14)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
     plt.tight_layout()
     plt.savefig("Figures/total_flux.pdf")
     plt.show()
@@ -137,23 +141,25 @@ def plot_congestion_index(densities):
     congestion_values = np.zeros(len(densities))
     for i, density in enumerate(densities):
         congestion_indexes = np.loadtxt(f"simulation_results/congestion_index_d{density}.csv", delimiter=",")
-        congestion_values[i] = np.mean(congestion_indexes)
+        congestion_values[i] = np.mean(congestion_indexes) * 100
     plt.figure(figsize=(10, 6))
-    plt.plot(densities, congestion_values, linestyle='-', marker='o', color='#008083')
+    plt.scatter(densities[9], congestion_values[9], color='#ef7f36', label=f'Critical density = {0.21}', zorder=2)
+    plt.plot(densities, congestion_values, linestyle='-', marker='o', color='#008083', zorder=1)
     plt.xlabel("Density", fontsize=14)
-    plt.ylabel("Congestion Index", fontsize=14)
-    plt.title("Congestion Index", fontsize=16)
+    plt.ylabel("CR (%)", fontsize=14)
+    plt.title("Congestion Ratio for varying density", fontsize=16)
     plt.grid(True)
-    plt.legend()
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
+    plt.xlim([0.01, 0.45])
+    plt.legend(fontsize=14)
     plt.tight_layout()
     plt.savefig("Figures/congestion_index.pdf")
     plt.show()
 
 if __name__ == "__main__":
 
-    densities = np.linspace(0.05, 0.45, 15)
+    densities = np.linspace(0.05, 0.43, 20)
     plot_congestion_flux(densities)
     plot_congestion_index(densities)
 

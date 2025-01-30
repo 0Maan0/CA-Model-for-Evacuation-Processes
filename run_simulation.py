@@ -52,7 +52,7 @@ def run_density_comparison(cmax, rmax, steps, densities):
             agent_fluxes = agent_flow(*ffca.agents_at_exit())
 
             phi_values[i] = current_mean_phi
-            congested_agents = Ntot - ffca.get_amount_agents_not_moved_forward()
+            congested_agents = Ntot - ffca.get_amount_agents_moved_forward()
             congestion_indexes[i] = congestion_index(Ntot, congested_agents)
             net_flow = ffca.global_movement()
             congestion_fluxes[i] = flux(net_flow, Ntot, cmax, rmax, steps)
@@ -69,10 +69,10 @@ def run_density_comparison(cmax, rmax, steps, densities):
 
 
 def main():
-    densities = np.linspace(0.05, 0.45, 15)
+    densities = np.linspace(0.05, 0.43, 20)
     cmax = 50
     rmax = 25
-    steps = 800
+    steps = 1000
     run_density_comparison(cmax, rmax, steps, densities)
     pass
 

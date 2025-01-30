@@ -500,21 +500,21 @@ class FFCA_wrap:
 
         return global_movement_count
 
-    def get_amount_agents_not_moved_forward(self):
+    def get_amount_agents_moved_forward(self):
         """
         Determines the amount of agents that have not moved in the current
         iteration.
         returns: the amount of agents that have not moved (int)
         """
-        not_moved_forward = 0
+        moved_forward = 0
         for old_pos, new_pos in self.positions_map.items():
             agent_type = self.structure_wrapped[new_pos]
-            if agent_type == AGENT_1 and new_pos.c >= old_pos.c:
-                not_moved_forward += 1
-            elif agent_type == AGENT_2 and new_pos.c <= old_pos.c:
-                not_moved_forward += 1
+            if agent_type == AGENT_1 and new_pos.c > old_pos.c:
+                moved_forward += 1
+            elif agent_type == AGENT_2 and new_pos.c < old_pos.c:
+                moved_forward += 1
 
-        return not_moved_forward
+        return moved_forward
 
 
 def string_to_ints(str):
