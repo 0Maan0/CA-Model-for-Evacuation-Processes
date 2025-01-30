@@ -160,7 +160,7 @@ def run():
     for i in range(steps):
         # Get image for current state of the grid
         img = grid_to_image(ffca.structure)
-        
+
         # Append the frame to the list
         frames.append(img)
         time.sleep(0.05)
@@ -203,7 +203,7 @@ def run_fun():
         ffca.show()
 
 def run_all():
-    densities = np.linspace(0.04, 0.25, 5)
+    densities = np.linspace(0.1, 0.25, 5)
     cmax = 50
     rmax = 25
     for density in densities:
@@ -216,22 +216,22 @@ def run_all():
         ffca = FFCA_wrap(rmax, cmax, Ntot, spawn_rate=0.025,
                         conflict_resolution_rate=0, alpha=0.3, delta=0.3,
                         static_field_strength=2.5, dynamic_field_strength=3,
-                        horizontal_bias=5000)  
+                        horizontal_bias=5000)
 
-        steps = 1000
         random_phi_values = []
         for _ in range(100):
             ffca = FFCA_wrap(rmax, cmax, Ntot, spawn_rate=0.025,
                         conflict_resolution_rate=0, alpha=0.3, delta=0.3,
                         static_field_strength=2.5, dynamic_field_strength=3,
-                        horizontal_bias=5000)  
+                        horizontal_bias=5000)
             N1, N2 = ffca.agents_in_row(ffca.structure)
             random_phi_values.append(order_parameter(Ntot, N1, N2))
         phi_zero = np.mean(random_phi_values)
         ffca = FFCA_wrap(rmax, cmax, Ntot, spawn_rate=0.025,
                         conflict_resolution_rate=0, alpha=0.3, delta=0.3,
                         static_field_strength=2.5, dynamic_field_strength=3,
-                        horizontal_bias=5000)  
+                        horizontal_bias=5000)
+        steps = 100
         #visualize_simulation(ffca, 1000)
         phi_values = np.zeros(steps)
         flux_values_1 = np.zeros(steps)
@@ -259,7 +259,7 @@ def run_all():
             current_mean_phi = mean_order_parameter(current_phi, phi_zero)
             ffca.step()
             agent_fluxes = agent_flow(*ffca.agents_at_exit())
-            
+
             total_flux_counter_1 += agent_fluxes[0]
             total_flux_counter_2 += agent_fluxes[1]
             flux_values_1[i] = total_flux_counter_1
@@ -305,6 +305,6 @@ if __name__ == "__main__":
 
 
 
-#critical density for congestion in for example traffic and look at the critical point and compare?  
+#critical density for congestion in for example traffic and look at the critical point and compare?
 #cluster size or distribution of flux powerlaw
-#why certain density parameter ==> relate to existing theoretical construct and explain differences 
+#why certain density parameter ==> relate to existing theoretical construct and explain differences
