@@ -349,8 +349,6 @@ class FFCA_wrap:
         moved_cells: the list of original positions of the moved agents
             (List[Pos])
         """
-        # print('moved cells')
-        # print(moved_cells)
         for p in moved_cells:
             dynamic_field[p] += 1
 
@@ -375,11 +373,11 @@ class FFCA_wrap:
         # extract moved agents
         positions_map = self.move_agents()
 
-        moved_cells = [pos - Pos(1, 0) for pos, new_pos in positions_map.items() if pos != new_pos]
-        # print('both moved cells')
-        # print(moved_cells)
-        moved_cells1 = [pos for pos in moved_cells if self.structure[pos] == AGENT_1]
-        moved_cells2 = [pos for pos in moved_cells if self.structure[pos] == AGENT_2]
+        # take the new pos since this is the position
+        moved_cells = {new_pos - Pos(1, 0): new_pos for pos, new_pos in positions_map.items() if pos != new_pos}
+
+        moved_cells1 = [pos for pos, new_pos in moved_cells.items() if self.structure[new_pos] == AGENT_1]
+        moved_cells2 = [pos for pos, new_pos in moved_cells.items() if self.structure[new_pos] == AGENT_2]
 
         # update both dynamic fields
         self.dynamic_field_1 = self.update_dynamic_field(self.dynamic_field_1, moved_cells1, AGENT_1)
@@ -481,6 +479,8 @@ class FFCA_wrap:
         global_movement_count = 0
         for old_pos, new_pos in self.positions_map_wrapped.items():
 
+            # ensures proper use of the global_movement function, needs to be
+            # called after the step function
             assert self.structure_wrapped[new_pos] in [AGENT_1, AGENT_2], "Agent has not moved yet, run this function after step :)"
             agent_type = self.structure_wrapped[new_pos]
             if agent_type == AGENT_1:
@@ -508,11 +508,16 @@ class FFCA_wrap:
         """
         not_moved_forward = 0
         for old_pos, new_pos in self.positions_map.items():
-            agent_type = self.structure_wrapped(new_pos)
+            agent_type = self.structure_wrapped[new_pos]
             if agent_type == AGENT_1 and new_pos.c >= old_pos.c:
                 not_moved_forward += 1
             elif agent_type == AGENT_2 and new_pos.c <= old_pos.c:
                 not_moved_forward += 1
+
+        # ensures we don't have more agents not moving that the total amount
+        # of agents in the grid
+        assert not_moved_forward <= len(self.structure.findall(AGENT_1)) + \
+               len(self.structure.findall(AGENT_2)), "more agents not moved than agents in the grid"
 
         return not_moved_forward
 
