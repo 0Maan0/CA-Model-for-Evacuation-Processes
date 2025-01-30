@@ -12,7 +12,7 @@ from FFCA import FFCA
 from FFCA_wrap import FFCA_wrap
 from FFCA_wrap import print_grid
 from Grid import Grid, Pos
-from metrics import order_parameter, mean_order_parameter, agent_flow, congestion_metric
+from metrics import order_parameter, mean_order_parameter, agent_flow, flux
 import time
 import numpy as np
 from Visualization import visualize_simulation, grid_to_image
@@ -271,7 +271,7 @@ def run_all():
             agent_2_leaving[i] = leave_count2
             phi_values[i] = current_mean_phi
 
-            congestion_flux[i] = congestion_metric(ffca.agents_at_exit()[2], ffca.agents_at_exit()[3], Ntot, cmax, rmax, steps)
+            congestion_flux[i] = flux(ffca.agents_at_exit()[2], ffca.agents_at_exit()[3], Ntot, cmax, rmax, steps)
         filename = f"gifs/gif{density}.gif"
         imageio.mimsave(filename, frames)
         print(f"GIF saved as {filename}")

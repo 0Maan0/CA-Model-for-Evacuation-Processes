@@ -75,10 +75,10 @@ def flux(net_flow, Ntot, Ncols, Nrows, iterations):
     Flux: velocity * density (Float)
     """
     velocity = net_flow / Ncols
-    density = Ntot / (Ncols * Nrows)
+    density = Ntot/ (Ncols * Nrows)
     return velocity * density
 
-def congestion_indec(Ntot, congested_agents):
+def congestion_index(Ntot, congested_agents):
     """	
     This function calculates the congestion index of the system.
     Input:
@@ -87,7 +87,7 @@ def congestion_indec(Ntot, congested_agents):
     Returns:
     congestion_index: The congestion index of the system per iteration. (Float)
     """
-    return congested_agents / Ntot
+    return congested_agents / Ntot / 2 # Divide by 2 because there are two types of agents
 
 def plot_congestion_and_flux(agent_1_leaving, agent_2_leaving, total_fluxes_agent_1, total_fluxes_agent_2):
     """
@@ -136,7 +136,8 @@ def plot_congestion_flux(densities):
 def plot_congestion_index(densities):
     congestion_values = np.zeros(len(densities))
     for i, density in enumerate(densities):
-        congestion_values[i] = np.mean(np.loadtxt(f"simulation_results/congestion_index_d{density}.csv", delimiter=","))
+        congestion_indexes = np.loadtxt(f"simulation_results/congestion_index_d{density}.csv", delimiter=",")
+        congestion_values[i] = np.mean(congestion_indexes)
     plt.figure(figsize=(10, 6))
     plt.plot(densities, congestion_values, linestyle='-', marker='o', color='#008083')
     plt.xlabel("Density", fontsize=14)
@@ -152,15 +153,7 @@ def plot_congestion_index(densities):
 
 if __name__ == "__main__":
 
-    densities = np.linspace(0.05, 0.35, 15)
+    densities = np.linspace(0.05, 0.3 , 4)
     plot_congestion_flux(densities)
-
-    # # Open flux_values_1.csv and flux_values_2.csv files and plot the total flux
-    flux_values_1 = np.loadtxt("simulation_results/flux_values_1.csv", delimiter=",")
-    flux_values_2 = np.loadtxt("simulation_results/flux_values_2.csv", delimiter=",")
-    # #plot_total_flux(flux_values_1, flux_values_2)
-    agent1 = np.loadtxt("simulation_results/agent_1_leaving.csv", delimiter=",")
-    agent2 = np.loadtxt("simulation_results/agent_2_leaving.csv", delimiter=",")
-    # detect_congestion(agent1, agent2)
-    plot_congestion_and_flux(agent1, agent2, flux_values_1, flux_values_2)
+    plot_congestion_index(densities)
 
