@@ -160,6 +160,7 @@ class FFCA_wrap:
 
         # Step 2: Solve conflicts between agents moving to the same position
         positions_map = self._solve_conflicts(positions_map)
+        positions_map = self.update_postions_map_wrap(positions_map)
         self.positions_map = positions_map
 
         # Step 3: Apply the resolved movements to the grid
@@ -183,11 +184,12 @@ class FFCA_wrap:
         positions_map = {}
 
         for pos, val in self.structure.items():
-            ps = [[0 for _ in range(3)] for _ in range(3)]
 
             # Only consider agents
             if val not in [AGENT_1, AGENT_2]:
                 continue
+
+            ps = [[0 for _ in range(3)] for _ in range(3)]
 
             # Loop over neighbors (Moore neighborhood)
             for dr in range(-1, 2):
@@ -233,7 +235,7 @@ class FFCA_wrap:
                     [pos + Pos(dr, dc) for dr in range(-1, 2) for dc in range(-1, 2)],
                     p=[p for row in ps for p in row]
                 )
-                positions_map[pos] = new_pos
+            positions_map[pos] = new_pos
 
         if self.verbose:
             print('probabilities:')
@@ -287,6 +289,22 @@ class FFCA_wrap:
 
         return positions_map
 
+    def update_postions_map_wrap(self, positions_map):
+        """
+        This function updates the positions_map so that the agents that would
+        move outside of the structure and therefore would wrap around to the
+        other side, actually have the wrapped position rather than the 'outside'
+        position
+        positions_map: the mapping of old positions to new positions (dict)
+        returns: the updated mapping of old positions to new positions (dict)
+        """
+        for pos, new_pos in positions_map.items():
+            if new_pos.c == self.structure.Cmax + 1:
+                positions_map[pos] = Pos(new_pos.r, 1)
+            elif new_pos.c == 0:
+                positions_map[pos] = Pos(new_pos.r, self.structure.Cmax)
+        return positions_map
+
     def _apply_movements(self, positions_map):
         """
         Applies the resolved movements to the grid.
@@ -295,14 +313,6 @@ class FFCA_wrap:
         for old_pos, new_pos in positions_map.items():
             if old_pos == new_pos:
                 continue
-            # if agent on exit, we move it to the other side: next to the exit
-            # on the other side
-            if new_pos.c == self.structure.Cmax + 1:
-                self.structure[Pos(new_pos.r, 1)] = self.structure[old_pos]
-                self.structure[old_pos] = EMPTY
-            elif new_pos.c == 0:
-                self.structure[Pos(new_pos.r, self.structure.Cmax)] = self.structure[old_pos]
-                self.structure[old_pos] = EMPTY
             else:
                 self.structure[new_pos] = self.structure[old_pos]
                 self.structure[old_pos] = EMPTY
@@ -357,8 +367,9 @@ class FFCA_wrap:
         and the dynamic field and spawn new agents.
         """
         # extract moved agents
-        position_map = self.move_agents()
-        moved_cells = [pos - Pos(1, 0) for pos, new_pos in position_map.items() if pos != new_pos]
+        positions_map = self.move_agents()
+        self.positions_map = positions_map
+        moved_cells = [pos - Pos(1, 0) for pos, new_pos in positions_map.items() if pos != new_pos]
         moved_cells1 = [pos for pos in moved_cells if self.structure[pos] == AGENT_1]
         moved_cells2 = [pos for pos in moved_cells if self.structure[pos] == AGENT_2]
 
@@ -437,6 +448,7 @@ class FFCA_wrap:
         first_col = self.get_first_column()
         for pos in first_col:
             if self.structure[pos] == AGENT_1:
+                # assert pos in self.positions_map.keys(), "Agent is not moving"
                 # check in first column if agent1 just entered
                 if inverted_position_map[pos].c == self.structure.Cmax:
                     agent_1_entering += 1

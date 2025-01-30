@@ -3,8 +3,8 @@ University      University of Amsterdam
 Course:         Complex systems simulation
 Authors:        Pjotr Piet, Maan Scipio, Sofia Tete
 IDs:            12714933, 15899039, 15830608
-Description:    This file contains functions for calculating the order parameter and flux, 
-                along with some functions the plot these parameters to evaluate them in terms 
+Description:    This file contains functions for calculating the order parameter and flux,
+                along with some functions the plot these parameters to evaluate them in terms
                 of lane formation and congestion.
 
 https://journals.aps.org/pre/abstract/10.1103/PhysRevE.75.051402
@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Order parameter to determine the lane formation in the system
-def order_parameter(Ntot, N1, N2):    
+def order_parameter(Ntot, N1, N2):
     '''
     This function calculates the order parameter for the system.
     Input:
@@ -28,7 +28,7 @@ def order_parameter(Ntot, N1, N2):
     for row in range(len(N1)):
         if N1[row] + N2[row] > 0:
             phi += ((N1[row] - N2[row])/ (N1[row] + N2[row])) **2
-            filled_rows += 1 
+            filled_rows += 1
     if Ntot == 0 or filled_rows == 0:
         print("No particles in the system, order parameter is not defined.")
         return np.nan
@@ -48,11 +48,19 @@ def mean_order_parameter(phi, phi0):
 def agent_flow(agent_1_leaving, agent_2_leaving, agent_1_entering, agent_2_entering):
     '''
     This function calculates the flow of agents in the system.
+<<<<<<< HEAD
     Input: 
     agent_1_leaving: Number of agents of type 1 leaving the system (Int)
     agent_2_leaving: Number of agents of type 2 leaving the system (Int)
     agent_1_entering: Number of agents of type 1 entering the system (Int)
     agent_2_entering: Number of agents of type 2 entering the system (Int)
+=======
+    Input:
+    agent_1_leaving: Row names where agents of type 1 are leaving the system (Array)
+    agent_2_leaving: Row names where agents of type 2 are leaving the system (Array)
+    agent_1_entering: Row names where agents of type 1 are entering the system (Array)
+    agent_2_entering: Row names where agents of type 2 are entering the system (Array)
+>>>>>>> 6c794e858b934a07e792264b4896057636e90f82
     Returns:
     total_flux_agent_1: Net flow of agents of type 1 through the exits. (Int)
     total_flux_agent_2: Net flow of agents of type 2 through the exits. (Int)
@@ -80,7 +88,7 @@ def congestion_metric(agent_1_leaving, agent_2_leaving, Ntot, Ncol, Nrows, itera
     total_normalised_flow = ( total1 + total2 ) / Ntot
     velocity = total_normalised_flow * Ncol
     density = Ntot / (Ncol * Nrows)
-    return velocity * density 
+    return velocity * density
 
 def plot_congestion_and_flux(agent_1_leaving, agent_2_leaving, total_fluxes_agent_1, total_fluxes_agent_2):
     iterations = len(agent_1_leaving)
@@ -123,8 +131,8 @@ def plot_congestion_flux(densities):
     plt.show()
 
 if __name__ == "__main__":
-    
-    densities = np.linspace(0.04, 0.25, 10)
+
+    densities = np.linspace(0.1, 0.25, 5)
     plot_congestion_flux(densities)
 
     # # Open flux_values_1.csv and flux_values_2.csv files and plot the total flux
@@ -135,4 +143,4 @@ if __name__ == "__main__":
     agent2 = np.loadtxt("simulation_results/agent_2_leaving.csv", delimiter=",")
     # detect_congestion(agent1, agent2)
     plot_congestion_and_flux(agent1, agent2, flux_values_1, flux_values_2)
-    
+
