@@ -69,7 +69,7 @@ def run_density_comparison(cmax, rmax, steps, densities):
 
 
 def main():
-    densities = np.linspace(0.05, 0.43, 20)
+    densities = np.linspace(0.05, 0.43, 15)
     cmax = 50
     rmax = 25
     steps = 1000

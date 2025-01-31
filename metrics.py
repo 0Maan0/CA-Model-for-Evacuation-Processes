@@ -159,7 +159,7 @@ def plot_congestion_index(densities):
 
 if __name__ == "__main__":
 
-    densities = np.linspace(0.05, 0.43, 20)
+    densities = np.linspace(0.05, 0.43, 15)
     plot_congestion_flux(densities)
     plot_congestion_index(densities)
 
