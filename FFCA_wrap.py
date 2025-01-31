@@ -360,7 +360,7 @@ class FFCA_wrap:
             delta = 0
             for nb in pos.nbs():
                 # absorbing boundary conditions (we skip if not in the grid)
-                if nb in dynamic_field and self.structure[nb] == agent_type:
+                if nb in dynamic_field:
                     delta += dynamic_field[nb]
             delta -= 4 * dynamic_field[pos]
             delta = (1 - self.delta) * (dynamic_field[pos] + self.alpha / 4 * delta)
@@ -375,11 +375,11 @@ class FFCA_wrap:
         # extract moved agents
         positions_map = self.move_agents()
 
-        moved_cells = [pos - Pos(1, 0) for pos, new_pos in positions_map.items() if pos != new_pos]
+        moved_cells = {pos - Pos(1, 0): new_pos for pos, new_pos in positions_map.items() if pos != new_pos}
         # print('both moved cells')
         # print(moved_cells)
-        moved_cells1 = [pos for pos in moved_cells if self.structure[pos] == AGENT_1]
-        moved_cells2 = [pos for pos in moved_cells if self.structure[pos] == AGENT_2]
+        moved_cells1 = [pos for pos, new_pos in moved_cells.items() if self.structure[new_pos] == AGENT_1]
+        moved_cells2 = [pos for pos, new_pos in moved_cells.items() if self.structure[new_pos] == AGENT_2]
 
         # update both dynamic fields
         self.dynamic_field_1 = self.update_dynamic_field(self.dynamic_field_1, moved_cells1, AGENT_1)
