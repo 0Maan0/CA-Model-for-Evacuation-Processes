@@ -154,7 +154,9 @@ class Grid:
         return f"Grid({self.grid})"
 
     def __iter__(self):
-        return iter(self.grid)
+        for r in range(self.Rmin, self.Rmax + 1):
+            for c in range(self.Cmin, self.Cmax + 1):
+                yield Pos(r, c)
 
     def keys(self):
         return self.grid.keys()
@@ -162,8 +164,29 @@ class Grid:
     def values(self):
         return self.grid.values()
 
-    def items(self):
+    def _items(self):
+        """
+        Unsafe items that also returns the wrapped col items
+        """
         return self.grid.items()
+
+    def items(self):
+        """
+        Safe items that only returns the items within the bounds of the grid.
+        """
+        return [(pos, value) for pos, value in self.grid.items() if
+                self.Rmin <= pos.r <= self.Rmax and
+                self.Cmin <= pos.c <= self.Cmax]
+
+    def get(self, pos, default=None):
+        """
+        Safely get the value at position `pos` without modifying the grid.
+
+        :param pos: The position (key) to look up.
+        :param default: The default value to return if `pos` is not in the grid.
+        :return: The value at `pos` or `default` if `pos` is not found.
+        """
+        return self.grid[pos] if pos in self.grid else default
 
     def find(self, target_value: float) -> List[Pos]:
         for pos, value in self.items():
@@ -172,7 +195,12 @@ class Grid:
         return None
 
     def findall(self, target_value: float) -> List[Pos]:
-        return [p for p, v in self.items() if v == target_value]
+        ret = []
+        for r in range(self.Rmin, self.Rmax + 1):
+            for c in range(self.Cmin, self.Cmax + 1):
+                if self.grid[Pos(r, c)] == target_value:
+                    ret.append(Pos(r, c))
+        return ret
 
     def to_string(self) -> str:
         result = ""
@@ -228,7 +256,7 @@ class Grid:
         func: the function to map over the keys (function)
         """
         new_grid = self.copy()
-        new_grid.grid = {func(key): value for key, value in self.items()}
+        new_grid.grid = {func(key): value for key, value in self._items()}
         return new_grid
 
     def get_column(self, c):

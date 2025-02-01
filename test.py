@@ -133,11 +133,14 @@ def run():
 
 
 def test_init():
-    ffca = FFCA_wrap(3, 5, 5)
-    ffca.show(full=True)
-    ffca.show()
-    ffca.step()
+    ffca = FFCA_wrap(3, 5, 1)
+    ffca.show(True)
 
+    steps = 10
+    for i in range(steps):
+        # time.sleep(0.5)
+        ffca.step()
+        ffca.show(True)
 
 def main():
     # test_small()
@@ -148,7 +151,6 @@ def main():
     # hb_high()
     # run()
     test_init()
-
 
 
 if __name__ == "__main__":
