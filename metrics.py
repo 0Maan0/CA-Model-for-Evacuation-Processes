@@ -122,9 +122,10 @@ def plot_congestion_flux(densities):
         if i == 12:
             print(np.loadtxt(f"simulation_results/congestion_flux_d{density}.csv", delimiter=","))
         flux_values[i] = np.mean(np.loadtxt(f"simulation_results/congestion_flux_d{density}.csv", delimiter=","))
+        std_values[i] = np.std(np.loadtxt(f"simulation_results/congestion_flux_d{density}.csv", delimiter=","))
     plt.figure(figsize=(10, 6))
     plt.scatter(densities[np.argmax(flux_values)], np.max(flux_values), color='#ef7f36', label=f'Critical density = {np.round(densities[np.argmax(flux_values)],2)}', zorder=2)
-    plt.plot(densities, flux_values, linestyle='-', marker='o', color='#008083', zorder=1)
+    plt.errorbar(densities, flux_values, linestyle='-', marker='o', color='#008083', zorder=1, yerr=std_values)
     plt.xlabel("Density", fontsize=14)
     plt.ylabel("Mean Flux", fontsize=14)
     plt.title("Mean flux of agents for varying density", fontsize=16)
@@ -139,12 +140,14 @@ def plot_congestion_flux(densities):
 
 def plot_congestion_index(densities):
     congestion_values = np.zeros(len(densities))
+    congestion_std = np.zeros(len(densities))
     for i, density in enumerate(densities):
         congestion_indexes = np.loadtxt(f"simulation_results/congestion_index_d{density}.csv", delimiter=",")
         congestion_values[i] = np.mean(congestion_indexes) * 100
+        congestion_std[i] = np.std(congestion_indexes) * 100
     plt.figure(figsize=(10, 6))
-    plt.scatter(densities[9], congestion_values[9], color='#ef7f36', label=f'Critical density = {0.21}', zorder=2)
-    plt.plot(densities, congestion_values, linestyle='-', marker='o', color='#008083', zorder=1)
+    plt.scatter(densities[6], congestion_values[6], color='#ef7f36', label=f'Critical density = {0.21}', zorder=2)
+    plt.errorbar(densities, congestion_values, linestyle='-', marker='o', color='#008083', zorder=1, yerr=congestion_std)
     plt.xlabel("Density", fontsize=14)
     plt.ylabel("CR (%)", fontsize=14)
     plt.title("Congestion Ratio for varying density", fontsize=16)
