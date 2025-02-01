@@ -224,3 +224,4 @@ fabric.properties
 *.jpg
 *.jpeg
 *.svg
+test.py
