@@ -106,10 +106,6 @@ class Pos:
         return other
 
 
-
-# TODO: change the initialisation of the Grid, the grid should simply take a
-# 2d array of integers and convert that to a grid. The init function should not
-# need anything else to change the struct to a grid.
 class Grid:
     """
     Implements a 2d grid structure using a dictionary with the shape:
@@ -120,34 +116,23 @@ class Grid:
     def __init__(self, struct) -> None:
         """
         Initializes the grid with a structure using the struct parameter.
-        struct: List[List[str]] or List[List[int]] or str
+        struct: List[List[int]]
         generates: the grid structure
         """
-
-        # to change the structure of the string to a 2d array for size knowledge
-        if isinstance(struct, str):
-            struct = [list(row) for row in struct.split('\n')]
 
         r = len(struct)
         c = len(struct[0])
         self.Rmin = 0
-        self.Rmax = r - 2
+        self.Rmax = r - 1
         self.Cmin = 0
-        self.Cmax = c - 2
+        self.Cmax = c - 1
 
         self.grid = defaultdict(lambda: float('inf'))
 
-        # we do this for the corridor structure
-        if isinstance(struct[0][0], str):
-            for r, row in enumerate(struct):
-                for c, char in enumerate(row):
-                    self.grid[Pos(r, c)] = MAP[char]
-
         # this is for the field convertion
-        elif isinstance(struct[0][0], int):
-            for r, row in enumerate(struct):
-                for c, value in enumerate(row):
-                    self.grid[Pos(r, c)] = value
+        for r, row in enumerate(struct):
+            for c, value in enumerate(row):
+                self.grid[Pos(r, c)] = value
 
 
     def __getitem__(self, key: Pos) -> float:
@@ -196,6 +181,9 @@ class Grid:
             result += row_str + "\n"
         return result
 
+    def show(self) -> None:
+        print(self.to_string())
+
     def remove(self, values: Set[float]) -> None:
         keys_to_remove = [pos for pos, value in self.items() if value in values]
         for key in keys_to_remove:
@@ -215,3 +203,60 @@ class Grid:
         copied_grid.Cmax = self.Cmax
         copied_grid.grid = self.grid.copy()
         return copied_grid
+
+    def calculate_bounds(self: 'Grid') -> List[int]:
+        """
+        Calcualtes the bounds of the grid.
+        grid: the grid to determine the bounds of (Grid)
+        """
+        positions = list(self.keys())
+        r_values = [pos.r for pos in positions]
+        c_values = [pos.c for pos in positions]
+        return [min(r_values), max(r_values), min(c_values), max(c_values)]
+
+    def get_bounds(self: 'Grid') -> List[int]:
+        """
+        Returns the bounds of the grid.
+        grid: the grid to get the bounds of (Grid)
+        """
+        return [self.Rmin, self.Rmax, self.Cmin, self.Cmax]
+
+    def map_keys(self: 'Grid', func) -> 'Grid':
+        """
+        Maps a function over the keys of the grid.
+        grid: the grid to map the function over (Grid)
+        func: the function to map over the keys (function)
+        """
+        new_grid = self.copy()
+        new_grid.grid = {func(key): value for key, value in self.items()}
+        return new_grid
+
+    def get_column(self, c):
+        """
+        Gets a column from the grid.
+        c: the column to get (int)
+        returns: the column (List[int])
+        """
+        assert Pos(0, c) in self.grid, "Column does not exist"
+        # print('grid get_column', self.grid)
+        # print(list(range(self.Rmax + 1)))
+        return [self.grid[Pos(r, c)] for r in range(self.Rmax + 1)]
+
+    def get_row(self, r):
+        """
+        Gets a row from the grid.
+        r: the row to get (int)
+        returns: the row (List[int])
+        """
+        assert Pos(r, 0) in self.grid, "Row does not exist"
+        return [self.grid[Pos(r, c)] for c in range(self.Cmax + 1)]
+
+    def update_column(self, c, column):
+        """
+        Updates a column in the grid.
+        c: the column to update (int)
+        column: the new values for the column (List[int])
+        """
+        assert len(column) == self.Rmax + 1, "Wrong size for new column values"
+        for r, val in enumerate(column):
+            self.grid[Pos(r, c)] = val
