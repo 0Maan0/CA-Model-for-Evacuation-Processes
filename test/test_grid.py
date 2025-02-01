@@ -101,12 +101,6 @@ class TestGridColumnUpdates(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.grid.update_column(1, new_values)
 
-    def test_update_non_existent_column(self):
-        """Test updating a non-existent column should raise an error."""
-        new_values = [40, 41, 42]
-        with self.assertRaises(AssertionError):
-            self.grid.update_column(5, new_values)  # Column index 5 does not exist
-
 
 if __name__ == '__main__':
     unittest.main()

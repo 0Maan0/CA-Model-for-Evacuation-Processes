@@ -16,22 +16,22 @@ def get_sparse_ffca():
 
 def test_dynamic_field():
     rows = 3
-    cols = 10
+    cols = 15
     agent_type = AGENT_2
     # spawn one left moving agent in the middle of the grid
-    l = get_agent_row(1, 3, 2, agent_type)
+    l = get_agent_row(13, 15, 1, agent_type,)
 
-    ffca = FFCA_wrap(rows, cols, 0, agents_list=l, dynamic_field_strength=1)
-    steps = 100
+    ffca = FFCA_wrap(rows, cols, 0, agents_list=l, dynamic_field_strength=3,
+                     alpha=0.3, delta=0.2, static_field_strength=2.5,
+                     horizontal_bias=100000)
+    steps = 20
     ffca.show()
     for i in range(steps):
         time.sleep(0.5)
         ffca.step()
         ffca.show()
-        print('dynamic field 1:')
-        print_field(ffca.dynamic_field_1)
-        print('dynamic field 1:')
-        print_field(ffca.dynamic_field_2)
+        print('dynamic field 2:')
+        ffca.print_field(ffca.dynamic_field_2)
 
 
 # test if the amount of agents leaving is actually comparable in congestion
@@ -124,23 +124,13 @@ def hb_high():
 
 def run():
     agents = 20
-    ffca = FFCA_wrap(10, 50, agents, horizontal_bias=10, dynamic_field_strength=4)
+    ffca = FFCA_wrap(10, 50, agents, horizontal_bias=5000, dynamic_field_strength=3)
     steps = 1000
     ffca.show()
     for i in range(steps):
         ffca.step()
         ffca.show()
 
-
-def test_init():
-    ffca = FFCA_wrap(3, 5, 1)
-    ffca.show(True)
-
-    steps = 10
-    for i in range(steps):
-        # time.sleep(0.5)
-        ffca.step()
-        ffca.show(True)
 
 def main():
     # test_small()
@@ -149,8 +139,10 @@ def main():
     # test_dynamic_field()
     # hb_low()
     # hb_high()
-    # run()
-    test_init()
+    run()
+    # test_init()
+
+    pass
 
 
 if __name__ == "__main__":

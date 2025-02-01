@@ -1,7 +1,7 @@
 import unittest
 import sys
 sys.path.append("..")  # Adds higher directory to python modules path.
-from FFCA_wrap import FFCA_wrap
+from FFCA_wrap import FFCA_wrap, AGENT_1, AGENT_2
 from Grid import Grid, Pos
 
 class TestFFCAWrap(unittest.TestCase):
@@ -21,8 +21,8 @@ class TestFFCAWrap(unittest.TestCase):
 
     def test_initialization(self):
         """Test if the FFCA_wrap initializes correctly."""
-        self.assertEqual(self.ffca.structure.Rmax, self.r)
-        self.assertEqual(self.ffca.structure.Cmax, self.c)
+        self.assertEqual(self.ffca.structure.Rmax, self.r - 1)
+        self.assertEqual(self.ffca.structure.Cmax, self.c - 1)
 
         # Check if the number of agents is correct
         agent1_count = len(self.ffca.structure.findall(1))

@@ -204,6 +204,24 @@ class FFCA_wrap:
         assert self.structure.Rmax == rmax and self.structure.Rmin == rmin, \
                 "Grid height changed"
 
+
+    def assert_new_valid_positions(self, positions_map):
+        """
+        Asserts that the new positions are valid positions on the grid.
+        positions_map: the mapping of old positions to new positions (dict)
+        """
+        b = all([self.structure.Rmin <= pos.r <= self.structure.Rmax and
+                    self.structure.Cmin <= pos.c <= self.structure.Cmax
+                    for pos in positions_map.values()])
+        if not b:
+            print('New positions:')
+            for pos, new_pos in positions_map.items():
+                print(f'{pos} -> {new_pos}')
+            self.show()
+            self.show(True)
+            print(self.structure)
+        assert b, "New positions are not valid"
+
     def move_agents(self):
         """
         Moves the agents on the grid. This function is split into logical parts:
@@ -215,13 +233,12 @@ class FFCA_wrap:
         """
         # Step 1: Generate movement probabilities for each agent
         positions_map = self._generate_positions_map()
-
-        self.assert_grid_constant_height()
+        self.positions_map_wrapped = positions_map
 
         # step 2: wrap the positions map
         positions_map = self.wrap_positions(positions_map)
 
-        self.assert_grid_constant_height()
+        self.assert_new_valid_positions(positions_map)
 
         # Step 3: Solve conflicts between agents moving to the same position
         positions_map = self._solve_conflicts(positions_map)
@@ -234,21 +251,9 @@ class FFCA_wrap:
         # Step 5: Update the wrapped structure
         self.update_wrapped_structure()
 
-        self.assert_grid_constant_height()
-
         # confirm that no agents were lost
         no_agent1 = len(self.structure.findall(AGENT_1))
         no_agent2 = len(self.structure.findall(AGENT_2))
-        if not no_agent1 == self.initial_agent_count_1 and \
-           no_agent2 == self.initial_agent_count_2:
-            print('Lost agents')
-            self.show()
-            self.show(True)
-            print(self.structure)
-            print('positions_map:')
-            for pos, new_pos in positions_map.items():
-                print(f'{pos} -> {new_pos}')
-
         assert no_agent1 == self.initial_agent_count_1 and \
                no_agent2 == self.initial_agent_count_2, "Lost agents"
 
@@ -281,7 +286,7 @@ class FFCA_wrap:
                     nb = pos + Pos(dr, dc)
 
                     # Skip non empty cells, since we can't move there
-                    if self.structure.get(nb, None) in [OBSTACLE, AGENT_1, AGENT_2, float('inf')]:
+                    if self.structure.get(nb, None) != EMPTY:
                         continue
 
                     # Determine the fields to use based on the agent type
@@ -338,14 +343,14 @@ class FFCA_wrap:
             if new_positions.count(new_position) > 1:
                 # Conflict not resolved
                 if not np.random.random() > self.mu:
-
                     # no one moves
                     for old_pos, new_pos in positions_map.items():
                         if new_pos == new_position:
                             positions_map[old_pos] = old_pos
                 # Resolve conflict
                 else:
-                    conflicted_positions = [old_pos for old_pos, new_pos in positions_map.items() if new_pos == new_position]
+                    conflicted_positions = [old_pos for old_pos, new_pos in positions_map.items()
+                                            if new_pos == new_position]
                     if conflicted_positions:
                         winner = np.random.choice(conflicted_positions, 1)[0]
                     else:
@@ -609,24 +614,24 @@ class FFCA_wrap:
         print((f"{str(rmax + 1)} " if coords else "") + bottom_wall)
         print()
 
-
     @staticmethod
-    def print_field(grid: Grid, full=False) -> None:
+    def field_string(field: Grid) -> str:
         """
-        Print function for both fields (static and dynamic).
-        grid: the grid to print (Grid)
-        full: whether to print the full grid or just the inner grid (bool)
+        Returns a string representation of a field.
+        field: the field to represent (Grid)
+        returns: the string representation of the field (str)
         """
-        rmin, rmax, cmin, cmax = grid.get_bounds()
-        # also print the wrapped 'border'
-        if full:
-            rmin, rmax, cmin, cmax = grid.calculate_bounds()
-        print(grid)
-
+        rmin, rmax, cmin, cmax = field.get_bounds()
+        string = ''
         for r in range(rmin, rmax + 1):
             for c in range(cmin, cmax + 1):
                 pos = Pos(r, c)
-                val = grid[pos]
-                print(f'{val:.2f}', end=' ')
-            print()
-        print()
+                val = field[pos]
+                string += f'{val:.2f} '
+            string += '\n'
+        return string
+
+    @staticmethod
+    def print_field(grid: Grid, full=False) -> None:
+        print(FFCA_wrap.field_string(grid))
+        
