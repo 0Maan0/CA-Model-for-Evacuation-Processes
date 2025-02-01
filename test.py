@@ -124,7 +124,7 @@ def hb_high():
 
 def run():
     agents = 20
-    ffca = FFCA_wrap(10, 50, agents, horizontal_bias=5000, dynamic_field_strength=3)
+    ffca = FFCA_wrap(10, 50, agents, horizontal_bias=5000, dynamic_field_strength=0)
     steps = 1000
     ffca.show()
     for i in range(steps):
