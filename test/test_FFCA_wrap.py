@@ -1,16 +1,16 @@
 import unittest
-import numpy as np
+import sys
+sys.path.append("..")  # Adds higher directory to python modules path.
 from FFCA_wrap import FFCA_wrap
 from Grid import Grid, Pos
 
 class TestFFCAWrap(unittest.TestCase):
-    def setup(self):
+    def setUp(self):
         """Set up a default FFCA_wrap instance for testing."""
         self.r, self.c = 10, 10  # Grid size
         self.agent_count = 5  # Number of agents per type
         self.ffca = FFCA_wrap(self.r, self.c, self.agent_count)
 
-    @staticmethod
     def row_of_agents(self, start, end, row_i, agent_type):
         assert row_i < self.r
         return [(Pos(row_i, i), agent_type) for i in range(start, end, 2)]
@@ -57,8 +57,6 @@ class TestFFCAWrap(unittest.TestCase):
 
         new_agent_count = len(self.ffca.structure.findall(1) + self.ffca.structure.findall(2))
         self.assertEqual(initial_agent_count, new_agent_count)
-
-    def
 
 
 if __name__ == "__main__":

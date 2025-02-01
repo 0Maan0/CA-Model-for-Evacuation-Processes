@@ -9,6 +9,8 @@ this class contains the testing for these base classes. This ensures correct
 """
 
 import unittest
+import sys
+sys.path.append("..")  # Adds higher directory to python modules path.
 from Grid import Grid, Pos
 
 
