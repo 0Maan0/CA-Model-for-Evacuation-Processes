@@ -9,6 +9,9 @@ import matplotlib.colors as mcolors
 
 
 def lane_formation(rows, cols, Ntot, steps, ffca):
+    """ 
+    Run the FFCA simulation for a given number of steps and return the order parameter values.
+    """
     # Calculate the mean phi for a random distribution of agents
     random_phi_values = []
     for _ in range(500):
@@ -27,12 +30,13 @@ def lane_formation(rows, cols, Ntot, steps, ffca):
     return phi_values
 
 
-steps = 2000
-number_agents = 50
+steps = 3000
+number_agents = 40
 number_rows = 80
 number_cols = 20
 
-""" # Define horizontal bias values
+
+# Define horizontal bias values
 horizontal_bias_values = [1, 25, 50, 100, 250, 500, 1000, 5000]
 
 # Colourmap
@@ -61,8 +65,8 @@ for i, phi_values in enumerate(phi_lists):
             color=color, linewidth=2, alpha=0.8, 
             label=f'Bias: {horizontal_bias_values[i]}')
 
-# Add colorbar to indicate bias levels
-sm = cm.ScalarMappable(cmap=new_cmap, norm=norm)
+# Add colorbar to indicate bias levels  
+sm = cm.ScalarMappable(cmap=new_cmap, norm=norm) 
 sm.set_array([])
 cbar = plt.colorbar(sm, ax=ax)
 cbar.set_label("Horizontal Bias", fontsize=14)
@@ -75,7 +79,46 @@ ax.legend()
 ax.tick_params(axis='both', labelsize=12)
 plt.tight_layout()
 plt.savefig("lane_formation_vs_horizontal_bias_dark_blues.pdf")
-plt.show() 
+plt.show()  
+
+n_runs = 5
+horizontal_bias_values = [1, 25, 50, 100, 250, 500, 1000, 2000]
+phi_values = []
+
+for n in range(n_runs):
+    print(f"Run number {n+1}")
+    phi_values.append([])
+    for bias in horizontal_bias_values:
+        print(f"Horizontal Bias: {bias}")
+        ffca = FFCA_wrap(number_rows, number_cols, number_agents, spawn_rate=0.025,
+                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
+                     static_field_strength=2.5, dynamic_field_strength=3,
+                     horizontal_bias=bias)  
+        phi_list = lane_formation(number_rows, number_cols, number_agents, steps, ffca)
+        phi_values[n].append(np.mean(phi_list[-100:]))  # average of last 100 values
+    
+phi_values = np.array(phi_values)
+
+# Calculate the mean and standard deviation of the order parameter
+mean_phi_values = np.mean(phi_values, axis=0)
+std_phi_values = np.std(phi_values, axis=0)
+
+# Make a plot with mean and standard deviation of the order parameter
+plt.figure(figsize=(10, 6))
+plt.plot(horizontal_bias_values, mean_phi_values, linestyle='-', label='Mean Order Parameter')
+# Do error bars with std
+plt.errorbar(horizontal_bias_values, mean_phi_values, yerr=std_phi_values, fmt='o', label='Standard Deviation')
+plt.xlabel("Horizontal Bias", fontsize=14)
+plt.ylabel("Lane formation", fontsize=14)
+plt.title("Lane formation vs Horizontal Bias", fontsize=16)
+plt.grid(True)
+plt.legend(loc='lower right')
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.tight_layout()
+plt.savefig("lane_formatiom_vs_horizontal_bias_all_final.pdf")
+plt.show()
+
 
 # Different density values
 total_num_cells = number_rows * number_cols
@@ -106,13 +149,13 @@ plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 plt.tight_layout()
 plt.savefig("lane_formatiom_vs_density.pdf")
-plt.show()
-
+plt.show()  
 
 # Lets run the simulation 10 times to get the standard deviation of the order parameter
+total_num_cells = number_rows * number_cols
 
-n_runs = 10
-densities = np.linspace(0.05, 0.25, 10)
+n_runs = 5
+densities = np.linspace(0.05, 0.5, 10)
 phi_values = []
 
 for n in range(n_runs):
@@ -120,7 +163,7 @@ for n in range(n_runs):
     phi_values.append([])
     for density in densities:
         print(f"Density: {density}")
-        Ntot = int(density * total_num_cells)
+        Ntot = int(density * total_num_cells / 2)
         ffca = FFCA_wrap(number_rows, number_cols, Ntot, spawn_rate=0.025,
                      conflict_resolution_rate=0, alpha=0.3, delta=0.3,
                      static_field_strength=2.5, dynamic_field_strength=3,
@@ -147,8 +190,9 @@ plt.legend()
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 plt.tight_layout()
-plt.savefig("ane_formatiom_vs_density_all_2.pdf")
-plt.show()
+plt.savefig("lane_formatiom_vs_density_all_final.pdf")
+plt.show()  
+
 
 # Different conflict resolution rates
 conflict_resolution_rates = [0, 0.25, 0.5, 0.75, 1]
@@ -223,7 +267,7 @@ ax.legend()
 ax.tick_params(axis='both', labelsize=12)
 plt.tight_layout()
 plt.savefig("lane_formation_vs_corridor_width.pdf")
-plt.show()  """
+plt.show()   
 
 # Define corridor lengths
 width = 20
@@ -270,4 +314,4 @@ ax.legend()
 ax.tick_params(axis='both', labelsize=12)
 plt.tight_layout()
 plt.savefig("lane_formation_vs_corridor_length.pdf")
-plt.show() 
+plt.show()  

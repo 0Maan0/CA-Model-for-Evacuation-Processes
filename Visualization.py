@@ -36,7 +36,7 @@ def grid_to_image(grid: Grid, scale: int = 20) -> np.ndarray:
     img = cv2.resize(img, (cols * scale, rows * scale), interpolation=cv2.INTER_NEAREST)
     return img
 
-def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'simulation2.gif', delay: float = 0.05):
+def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'simulation3.gif', delay: float = 0.05):
     frames = []
     
     for i in range(steps):
@@ -55,7 +55,7 @@ def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'simulatio
 
 if __name__ == "__main__":
     # Call the visualization function
-    ffca = FFCA_wrap(20, 50, 50, spawn_rate=0.025,
+    ffca = FFCA_wrap(12, 20, 10, spawn_rate=0.025,
                     conflict_resolution_rate=0, alpha=0.3, delta=0.3,
                     static_field_strength=2.5, dynamic_field_strength=3,
                     horizontal_bias=5000)  
