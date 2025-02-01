@@ -16,7 +16,7 @@ same standard functions as a dictionary. This class is used to represent a few
 different fields in the FFCA, since this class makes use of 4 different 2s
 structures. For these 4 structures the Grid class is used.
 """
-from typing import Dict, List, Set, Iterable, Union
+from typing import List, Set, Iterable, Union
 from collections import defaultdict
 
 
@@ -134,7 +134,6 @@ class Grid:
             for c, value in enumerate(row):
                 self.grid[Pos(r, c)] = value
 
-
     def __getitem__(self, key: Pos) -> float:
         return self.grid[key]
 
@@ -218,7 +217,6 @@ class Grid:
             del self.grid[key]
         return self
 
-
     def copy(self) -> 'Grid':
         """
         Creates and returns a deep copy of the Grid instance.
@@ -266,8 +264,6 @@ class Grid:
         returns: the column (List[int])
         """
         assert Pos(0, c) in self.grid, "Column does not exist"
-        # print('grid get_column', self.grid)
-        # print(list(range(self.Rmax + 1)))
         return [self.grid[Pos(r, c)] for r in range(self.Rmax + 1)]
 
     def get_row(self, r):

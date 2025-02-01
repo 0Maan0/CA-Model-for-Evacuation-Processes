@@ -14,7 +14,6 @@ update functionality, to update the positions of the agents.
 import numpy as np
 import time
 from collections import defaultdict
-from typing import List, Tuple
 from Grid import Grid, Pos
 
 
@@ -42,6 +41,7 @@ MAP_STRING_TO_INT = {
     '2': AGENT_2,
     '.': EMPTY,
 }
+
 
 def to_corridor(r, c):
     """
@@ -202,8 +202,7 @@ class FFCA_wrap:
         """
         rmin, rmax, cmin, cmax = self.structure.calculate_bounds()
         assert self.structure.Rmax == rmax and self.structure.Rmin == rmin, \
-                "Grid height changed"
-
+               "Grid height changed"
 
     def assert_new_valid_positions(self, positions_map):
         """
@@ -211,8 +210,8 @@ class FFCA_wrap:
         positions_map: the mapping of old positions to new positions (dict)
         """
         b = all([self.structure.Rmin <= pos.r <= self.structure.Rmax and
-                    self.structure.Cmin <= pos.c <= self.structure.Cmax
-                    for pos in positions_map.values()])
+                 self.structure.Cmin <= pos.c <= self.structure.Cmax
+                 for pos in positions_map.values()])
         if not b:
             print('New positions:')
             for pos, new_pos in positions_map.items():
@@ -538,7 +537,8 @@ class FFCA_wrap:
         global_movement_count = 0
         for old_pos, new_pos in self.positions_map_wrapped.items():
 
-            assert self.structure_wrapped[new_pos] in [AGENT_1, AGENT_2], "Agent has not moved yet, run this function after step :)"
+            assert self.structure_wrapped[new_pos] in [AGENT_1, AGENT_2], \
+                   "Agent has not moved yet, run this function after step :)"
             agent_type = self.structure_wrapped[new_pos]
             if agent_type == AGENT_1:
                 # agent 1 moves 'forward'
@@ -634,4 +634,3 @@ class FFCA_wrap:
     @staticmethod
     def print_field(grid: Grid, full=False) -> None:
         print(FFCA_wrap.field_string(grid))
-        
