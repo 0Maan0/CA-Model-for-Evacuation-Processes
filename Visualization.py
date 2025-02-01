@@ -16,6 +16,9 @@ EMPTY = 3
 # Visualisation of the grid and agent positions
 
 def grid_to_image(grid: Grid, scale: int = 20) -> np.ndarray:
+    """
+    Converts a grid object to an image for visualization.
+    """
     rows = grid.Rmax + 2
     cols = grid.Cmax + 2
     img = np.zeros((rows, cols, 3), dtype=np.uint8)
@@ -37,6 +40,9 @@ def grid_to_image(grid: Grid, scale: int = 20) -> np.ndarray:
     return img
 
 def visualize_simulation(ffca: FFCA_wrap, steps: int, filename: str = 'simulation3.gif', delay: float = 0.05):
+    """
+    Creates a GIF for the simulation of the FFCA for a given number of steps.
+    """
     frames = []
     
     for i in range(steps):
