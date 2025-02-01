@@ -4,11 +4,20 @@ from FFCA_wrap import FFCA_wrap
 from Grid import Grid, Pos
 
 class TestFFCAWrap(unittest.TestCase):
-    def setUp(self):
+    def setup(self):
         """Set up a default FFCA_wrap instance for testing."""
         self.r, self.c = 10, 10  # Grid size
         self.agent_count = 5  # Number of agents per type
         self.ffca = FFCA_wrap(self.r, self.c, self.agent_count)
+
+    @staticmethod
+    def row_of_agents(self, start, end, row_i, agent_type):
+        assert row_i < self.r
+        return [(Pos(row_i, i), agent_type) for i in range(start, end, 2)]
+
+    def col_of_agents(self, start, end, col_i, agent_type):
+        assert col_i < self.c
+        return [(Pos(i, col_i), agent_type) for i in range(start, end, 2)]
 
     def test_initialization(self):
         """Test if the FFCA_wrap initializes correctly."""
@@ -37,6 +46,19 @@ class TestFFCAWrap(unittest.TestCase):
 
         # Ensure the dynamic field has changed
         self.assertNotEqual(initial_dynamic_field, new_dynamic_field)
+
+    def test_number_of_agents_constant(self):
+        """Test if the number of agents remains constant."""
+        initial_agent_count = len(self.ffca.structure.findall(1) + self.ffca.structure.findall(2))
+
+        no_steps = 100
+        for _ in range(no_steps):
+            self.ffca.step()
+
+        new_agent_count = len(self.ffca.structure.findall(1) + self.ffca.structure.findall(2))
+        self.assertEqual(initial_agent_count, new_agent_count)
+
+    def
 
 
 if __name__ == "__main__":
