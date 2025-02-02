@@ -460,6 +460,7 @@ class FFCA_wrap:
         """
         # extract moved agents
         positions_map = self.move_agents()
+        self.positions_map = positions_map
 
         moved_cells = {pos: new_pos for pos, new_pos in positions_map.items() if pos != new_pos}
         moved_cells1 = [pos for pos, new_pos in moved_cells.items() if self.structure[new_pos] == AGENT_1]
@@ -565,7 +566,8 @@ class FFCA_wrap:
         """
         moved_forward = 0
         for old_pos, new_pos in self.positions_map.items():
-            agent_type = self.structure_wrapped[new_pos]
+            assert new_pos in self.structure
+            agent_type = self.structure[new_pos]
             if agent_type == AGENT_1 and new_pos.c > old_pos.c:
                 moved_forward += 1
             elif agent_type == AGENT_2 and new_pos.c < old_pos.c:
