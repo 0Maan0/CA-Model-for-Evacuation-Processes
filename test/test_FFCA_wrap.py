@@ -1,6 +1,7 @@
 import unittest
-import numpy as np
-from FFCA_wrap import FFCA_wrap
+import sys
+sys.path.append("..")  # Adds higher directory to python modules path.
+from FFCA_wrap import FFCA_wrap, AGENT_1, AGENT_2
 from Grid import Grid, Pos
 
 class TestFFCAWrap(unittest.TestCase):
@@ -10,10 +11,18 @@ class TestFFCAWrap(unittest.TestCase):
         self.agent_count = 5  # Number of agents per type
         self.ffca = FFCA_wrap(self.r, self.c, self.agent_count)
 
+    def row_of_agents(self, start, end, row_i, agent_type):
+        assert row_i < self.r
+        return [(Pos(row_i, i), agent_type) for i in range(start, end, 2)]
+
+    def col_of_agents(self, start, end, col_i, agent_type):
+        assert col_i < self.c
+        return [(Pos(i, col_i), agent_type) for i in range(start, end, 2)]
+
     def test_initialization(self):
         """Test if the FFCA_wrap initializes correctly."""
-        self.assertEqual(self.ffca.structure.Rmax, self.r)
-        self.assertEqual(self.ffca.structure.Cmax, self.c)
+        self.assertEqual(self.ffca.structure.Rmax, self.r - 1)
+        self.assertEqual(self.ffca.structure.Cmax, self.c - 1)
 
         # Check if the number of agents is correct
         agent1_count = len(self.ffca.structure.findall(1))
@@ -37,6 +46,17 @@ class TestFFCAWrap(unittest.TestCase):
 
         # Ensure the dynamic field has changed
         self.assertNotEqual(initial_dynamic_field, new_dynamic_field)
+
+    def test_number_of_agents_constant(self):
+        """Test if the number of agents remains constant."""
+        initial_agent_count = len(self.ffca.structure.findall(1) + self.ffca.structure.findall(2))
+
+        no_steps = 100
+        for _ in range(no_steps):
+            self.ffca.step()
+
+        new_agent_count = len(self.ffca.structure.findall(1) + self.ffca.structure.findall(2))
+        self.assertEqual(initial_agent_count, new_agent_count)
 
 
 if __name__ == "__main__":

@@ -14,7 +14,6 @@ update functionality, to update the positions of the agents.
 import numpy as np
 import time
 from collections import defaultdict
-from typing import List, Tuple
 from Grid import Grid, Pos
 
 
@@ -26,7 +25,7 @@ AGENT_2 = 2
 EMPTY = 3
 
 # mapping for values to string
-MAP_TO_STRING = {
+MAP_INT_TO_STRING = {
     OBSTACLE: '#',
     EXIT: 'E',
     AGENT_1: 'R',
@@ -35,13 +34,23 @@ MAP_TO_STRING = {
 }
 
 # map for string to values
-MAP = {
+MAP_STRING_TO_INT = {
     '#': OBSTACLE,
     'E': EXIT,
     '1': AGENT_1,
     '2': AGENT_2,
     '.': EMPTY,
 }
+
+
+def to_corridor(r, c):
+    """
+    Creates a corridor with the given dimensions.
+    r: the amount of rows of the corridor, (int)
+    c: the amount of columns of the corridor, (int)
+    returns: the corridor (List[List[int]])
+    """
+    return [[EMPTY for _ in range(c)] for _ in range(r)]
 
 
 class FFCA_wrap:
@@ -87,15 +96,14 @@ class FFCA_wrap:
             for pos, agent in agents_list:
                 self.structure[pos] = agent
 
-        # then initialise the wrapped structure after all agent placement
-        self.structure_wrapped = self.get_wrapped_structure()
+        # wrap the structure (add last col to beginning and first col to end)
+        self.update_wrapped_structure()
 
         # field 1 is defined as 'to the right'
         # field 2 is defined as 'to the left'
-        # fields go from high to low
         self.static_field_1 = None
         self.static_field_2 = None
-        self.init_static_fields()
+        self.static_field_1, self.static_field_2 = self.init_static_fields()
 
         # dynamic field initialisation
         self.dynamic_field_1 = None
@@ -112,6 +120,25 @@ class FFCA_wrap:
         # positions map to detect movement per iteration
         self.positions_map = None
 
+    def update_column(self, c, column):
+        self.structure.update_column(c, column)
+
+    def get_column(self, c):
+        return self.structure.get_column(c)
+
+    def get_row(self, r):
+        return self.structure.get_row(r)
+
+    def update_wrapped_structure(self):
+        """
+        Wraps the structure of the grid. Adds/updates the wrapped columns
+        to/of the structure
+        """
+        # add the last column to the beginning
+        self.update_column(-1, self.get_column(self.structure.Cmax))
+        # add the first column to the end
+        self.update_column(self.structure.Cmax + 1, self.get_column(0))
+
     def init_agents(self, agent_count):
         """
         Initialises the agents on the grid. 'agent_count' agents of both kinds
@@ -119,7 +146,8 @@ class FFCA_wrap:
         agent_count: the amount of agents of type 1 and type 2 (int)
         returns: the grid with the agents placed on it (Grid)
         """
-        assert 2 * agent_count < self.structure.Rmax * self.structure.Cmax, "Too many agents for the grid"
+        assert 2 * agent_count < (self.structure.Rmax + 1) * (self.structure.Cmax + 1), \
+               "Too many agents for the grid"
         valid_positions = self.structure.findall(EMPTY)
         pos = np.random.choice(valid_positions, 2*agent_count, replace=False)
         for i in range(agent_count):
@@ -135,8 +163,63 @@ class FFCA_wrap:
         the right only. And vice versa for agents of type 2.
         """
         R, C = self.structure.Rmax, self.structure.Cmax
-        self.static_field_1 = Grid([[-r for r in range(C+1, -1, -1)] for _ in range(R)])
-        self.static_field_2 = Grid([[-r for r in range(0, C + 2)] for _ in range(R)])
+        # wrapping static field, add one column on both sides
+        static_field_1 = Grid([[-r for r in range(C + 2, -1, -1)] for _ in range(R + 1)])
+        static_field_2 = Grid([[-r for r in range(0, C + 3)] for _ in range(R + 1)])
+
+        # copy the structure bounds to the static fields
+        Rmin, Rmax, Cmin, Cmax = self.structure.get_bounds()
+        static_field_1.Rmin = static_field_2.Rmin = Rmin
+        static_field_1.Rmax = static_field_2.Rmax = Rmax
+        static_field_1.Cmin = static_field_2.Cmin = Cmin
+        static_field_1.Cmax = static_field_2.Cmax = Cmax
+
+        # map the keys to the wrapped grid
+        static_field_1 = static_field_1.map_keys(lambda pos: pos - Pos(0, 1))
+        static_field_2 = static_field_2.map_keys(lambda pos: pos - Pos(0, 1))
+
+        return static_field_1, static_field_2
+
+    def wrap_positions(self, positions_map):
+        """
+        Wraps the positions of the agents to the 'non'-wrapped part. If an
+        agents position would be outside of the structure it will be wrapped
+        around to the other side.
+        positions_map: the mapping of old positions to new positions
+            (dict[Pos, Pos])
+        returns: the wrapped positions (dict[Pos, Pos])
+        """
+        for pos, new_pos in positions_map.items():
+            if new_pos.c == self.structure.Cmax + 1:
+                positions_map[pos] = Pos(new_pos.r, 0)
+            elif new_pos.c == -1:
+                positions_map[pos] = Pos(new_pos.r, self.structure.Cmax)
+        return positions_map
+
+    def assert_grid_constant_height(self):
+        """
+        Asserts that the grid has a constant height.
+        """
+        rmin, rmax, cmin, cmax = self.structure.calculate_bounds()
+        assert self.structure.Rmax == rmax and self.structure.Rmin == rmin, \
+               "Grid height changed"
+
+    def assert_new_valid_positions(self, positions_map):
+        """
+        Asserts that the new positions are valid positions on the grid.
+        positions_map: the mapping of old positions to new positions (dict)
+        """
+        b = all([self.structure.Rmin <= pos.r <= self.structure.Rmax and
+                 self.structure.Cmin <= pos.c <= self.structure.Cmax
+                 for pos in positions_map.values()])
+        if not b:
+            print('New positions:')
+            for pos, new_pos in positions_map.items():
+                print(f'{pos} -> {new_pos}')
+            self.show()
+            self.show(True)
+            print(self.structure)
+        assert b, "New positions are not valid"
 
     def move_agents(self):
         """
@@ -148,48 +231,49 @@ class FFCA_wrap:
             A mapping of old positions to new positions (dict)
         """
         # Step 1: Generate movement probabilities for each agent
-        positions_map = self._generate_probabilities()
-
-        # map all new positions to be inside of the structure instead of
-        # the wrapped structure
-        for pos, new_pos in positions_map.items():
-            if new_pos.c == self.structure.Cmax + 1:
-                positions_map[pos] = Pos(new_pos.r, 1)
-            elif new_pos.c == 0:
-                positions_map[pos] = Pos(new_pos.r, self.structure.Cmax)
-
-        # Step 2: Solve conflicts between agents moving to the same position
-        positions_map = self._solve_conflicts(positions_map)
+        positions_map = self._generate_positions_map()
         self.positions_map_wrapped = positions_map
 
-        # update the positions map so that the agents that would move outside
-        # of the structure and therefore would wrap around to the other side
-        positions_map = self.update_postions_map_wrap(positions_map)
-        self.positions_map = positions_map
+        # step 2: wrap the positions map
+        positions_map = self.wrap_positions(positions_map)
 
-        # Step 3: Apply the resolved movements to the grid
+        self.assert_new_valid_positions(positions_map)
+
+        # Step 3: Solve conflicts between agents moving to the same position
+        positions_map = self._solve_conflicts(positions_map)
+
+        self.assert_grid_constant_height()
+
+        # Step 4: Apply the resolved movements to the grid
         self._apply_movements(positions_map)
 
-        # validate that we haven't lost any agents:
+        # Step 5: Update the wrapped structure
+        self.update_wrapped_structure()
+
+        # confirm that no agents were lost
         no_agent1 = len(self.structure.findall(AGENT_1))
         no_agent2 = len(self.structure.findall(AGENT_2))
-        assert no_agent1 == self.initial_agent_count_1 and no_agent2 == self.initial_agent_count_2, "Lost agents"
+        assert no_agent1 == self.initial_agent_count_1 and \
+               no_agent2 == self.initial_agent_count_2, "Lost agents"
 
         return positions_map
 
-    def _generate_probabilities(self):
+    def find_all_agents(self):
+        return self.structure.findall(AGENT_1) + self.structure.findall(AGENT_2)
+
+    def _generate_positions_map(self):
         """
-        Generates the movement probabilities for each agent. Uses moore's
-        neighbourhood for the probabilities. The probabilities are calculated
-        using the static fields and the dynamic fields as mentioned in the base
-        paper.
+        Generates the position map for each agent. It does so by calculating
+        the probabilities for each agent to move to a certain position and
+        picking one of these positions based on the probabilities.
+        returns: the mapping of old positions to new positions (dict[Pos, Pos])
         """
         pss = {}
         positions_map = {}
 
         for pos, val in self.structure.items():
 
-            # Only consider agents
+            # Only consider agents and only the non wrapped structure
             if val not in [AGENT_1, AGENT_2]:
                 continue
 
@@ -200,19 +284,20 @@ class FFCA_wrap:
                 for dc in range(-1, 2):
                     nb = pos + Pos(dr, dc)
 
-                    # Skip invalid cells
-                    if self.structure_wrapped[nb] in [AGENT_1, AGENT_2, OBSTACLE]:
+                    # Skip non empty cells, since we can't move there
+                    if self.structure.get(nb, None) != EMPTY:
                         continue
 
-                    # Determine the static field to use based on the agent type
+                    # Determine the fields to use based on the agent type
                     sf = self.static_field_1 if val == AGENT_1 else self.static_field_2
                     df = self.dynamic_field_1 if val == AGENT_1 else self.dynamic_field_2
-                    field_pos = nb - Pos(1, 0)
-                    assert field_pos in sf
-                    assert field_pos in df
 
-                    # Calculate transition probability
-                    p = np.exp(self.ks * sf[field_pos] + self.kd * df[field_pos])
+                    # confirm that the position is also in the fields
+                    assert pos in sf
+                    assert pos in df
+
+                    # Calculate transition probability based on the formula
+                    p = np.exp(self.ks * sf[pos] + self.kd * df[pos])
 
                     # Apply horizontal bias for agents
                     horizontal_bias = 1
@@ -226,14 +311,14 @@ class FFCA_wrap:
             Z = sum(sum(row) for row in ps)
             if Z > 0:
                 ps = [[p / Z for p in row] for row in ps]
+                # confirm that the normalised probabilites sum to 1
                 assert abs(sum(sum(row) for row in ps) - 1) < 1e-6, "Probabilities do not sum to 1"
-            else:
-                ps = [[0 for _ in range(3)] for _ in range(3)]
 
-            # Store probabilities and decide the tentative new position
             pss[pos] = ps
-            if sum([sum(row) for row in ps]) == 0:  # Agent surrounded
+            # agent has no valid moves so it stays in the same position
+            if Z <= 0:
                 new_pos = pos
+            # pick one of the positions based on the probabilities
             else:
                 new_pos = np.random.choice(
                     [pos + Pos(dr, dc) for dr in range(-1, 2) for dc in range(-1, 2)],
@@ -241,19 +326,8 @@ class FFCA_wrap:
                 )
             positions_map[pos] = new_pos
 
-        if self.verbose:
-            print('probabilities:')
-            for pos, ps in pss.items():
-                print(f'pos: {pos}')
-                for p_row in ps:
-                    print(list(map(lambda x: round(x, 2), p_row)))
-                print()
-            print('positions_map:')
-            for pos, new_pos in positions_map.items():
-                print(f'{pos} -> {new_pos}')
-            print()
-            print()
-
+        assert all([agent in positions_map for agent in self.find_all_agents()]), \
+               "Not all agents have where considered"
         return positions_map
 
     def _solve_conflicts(self, positions_map):
@@ -265,15 +339,17 @@ class FFCA_wrap:
         new_positions = list(positions_map.values())
 
         for new_position in new_positions:
-            if new_positions.count(new_position) > 1:  # Conflict detected
-                if not np.random.random() > self.mu:  # Conflict not resolved
-
+            if new_positions.count(new_position) > 1:
+                # Conflict not resolved
+                if not np.random.random() > self.mu:
                     # no one moves
                     for old_pos, new_pos in positions_map.items():
                         if new_pos == new_position:
                             positions_map[old_pos] = old_pos
-                else:  # Resolve conflict
-                    conflicted_positions = [old_pos for old_pos, new_pos in positions_map.items() if new_pos == new_position]
+                # Resolve conflict
+                else:
+                    conflicted_positions = [old_pos for old_pos, new_pos in positions_map.items()
+                                            if new_pos == new_position]
                     if conflicted_positions:
                         winner = np.random.choice(conflicted_positions, 1)[0]
                     else:
@@ -289,7 +365,8 @@ class FFCA_wrap:
         new_positions = list(positions_map.values())
 
         # asserts that we have no agents moving to the same position
-        assert len(new_positions) == len(set(new_positions)), "Agents are moving to the same position"
+        assert len(new_positions) == len(set(new_positions)), \
+               "Agents are moving to the same position"
 
         return positions_map
 
@@ -330,15 +407,26 @@ class FFCA_wrap:
             structure_wrapped[Pos(r + 1, 0)] = self.structure[Pos(r + 1, self.structure.Cmax)]
         return structure_wrapped
 
-
     def init_dynamic_fields(self):
         """
         Initialises the dynamic field with zeros.
         returns: the dynamic field (Grid)
         """
         R, C = self.structure.Rmax, self.structure.Cmax
-        dynamic_field_1 = Grid([[0 for _ in range(C + 2)] for _ in range(R)])
-        dynamic_field_2 = Grid([[0 for _ in range(C + 2)] for _ in range(R)])
+        dynamic_field_1 = Grid([[0 for _ in range(C + 3)] for _ in range(R + 1)])
+        dynamic_field_2 = Grid([[0 for _ in range(C + 3)] for _ in range(R + 1)])
+
+        # ensure that the dynamic fields have the same bounds as the structure
+        Rmin, Rmax, Cmin, Cmax = self.structure.get_bounds()
+        dynamic_field_1.Rmin = dynamic_field_2.Rmin = Rmin
+        dynamic_field_1.Rmax = dynamic_field_2.Rmax = Rmax
+        dynamic_field_1.Cmin = dynamic_field_2.Cmin = Cmin
+        dynamic_field_1.Cmax = dynamic_field_2.Cmax = Cmax
+
+        # map one col to the left for wrapped structure
+        dynamic_field_1 = dynamic_field_1.map_keys(lambda pos: pos - Pos(0, 1))
+        dynamic_field_2 = dynamic_field_2.map_keys(lambda pos: pos - Pos(0, 1))
+
         return dynamic_field_1, dynamic_field_2
 
     def update_dynamic_field(self, dynamic_field, moved_cells, agent_type):
@@ -349,18 +437,16 @@ class FFCA_wrap:
         moved_cells: the list of original positions of the moved agents
             (List[Pos])
         """
-        # print('moved cells')
-        # print(moved_cells)
         for p in moved_cells:
             dynamic_field[p] += 1
 
-        new_dynamic_field = Grid([[0 for _ in range(self.structure.Cmax + 2)] for _ in range(self.structure.Rmax)])
+        new_dynamic_field = self.dynamic_field_1.copy()
 
         for pos in dynamic_field:
             delta = 0
             for nb in pos.nbs():
                 # absorbing boundary conditions (we skip if not in the grid)
-                if nb in dynamic_field and self.structure[nb] == agent_type:
+                if nb in dynamic_field:
                     delta += dynamic_field[nb]
             delta -= 4 * dynamic_field[pos]
             delta = (1 - self.delta) * (dynamic_field[pos] + self.alpha / 4 * delta)
@@ -375,44 +461,24 @@ class FFCA_wrap:
         # extract moved agents
         positions_map = self.move_agents()
 
-        moved_cells = [pos - Pos(1, 0) for pos, new_pos in positions_map.items() if pos != new_pos]
-        # print('both moved cells')
-        # print(moved_cells)
-        moved_cells1 = [pos for pos in moved_cells if self.structure[pos] == AGENT_1]
-        moved_cells2 = [pos for pos in moved_cells if self.structure[pos] == AGENT_2]
+        moved_cells = {pos: new_pos for pos, new_pos in positions_map.items() if pos != new_pos}
+        moved_cells1 = [pos for pos, new_pos in moved_cells.items() if self.structure[new_pos] == AGENT_1]
+        moved_cells2 = [pos for pos, new_pos in moved_cells.items() if self.structure[new_pos] == AGENT_2]
 
         # update both dynamic fields
         self.dynamic_field_1 = self.update_dynamic_field(self.dynamic_field_1, moved_cells1, AGENT_1)
         self.dynamic_field_2 = self.update_dynamic_field(self.dynamic_field_2, moved_cells2, AGENT_2)
-        self.structure_wrapped = self.get_wrapped_structure()
 
-    def show(self):
+    def run(self, steps, delay=0):
         """
-        Prints the structure of the FFCA in the console.
+        Runs the FFCA model for a given amount of steps.
+        steps: the amount of steps to run the model for (int)
+        delay: the delay between each step in seconds (float)
         """
-        r_positions = [p.r for p in self.structure.keys()]
-        rmin, rmax = min(r_positions), max(r_positions)
-        c_positions = [p.c for p in self.structure.keys()]
-        cmin, cmax = min(c_positions), max(c_positions)
-
-        for r in range(rmin, rmax + 1):
-            for c in range(cmin, cmax + 1):
-                pos = Pos(r, c)
-                val = self.structure[pos]
-                char = MAP_TO_STRING.get(val, '?')
-                print(char, end='')
-            print()
-        print()
-
-    def validate_removal(self):
-        """
-        Validates that only the agents are removed from the exits, and ensures
-        no other agents are accidentally lost.
-        """
-        for pos, val in self.structure.items():
-            if val in [AGENT_1, AGENT_2]:
-                assert self.structure[pos + Pos(1, 0)] == EXIT, "Agent is not on an exit"
-        pass
+        for _ in range(steps):
+            self.step()
+            self.show()
+            time.sleep(delay)
 
     def agents_in_row(self, structure):
         agent_counts = defaultdict(lambda: {AGENT_1: 0, AGENT_2: 0})
@@ -425,16 +491,6 @@ class FFCA_wrap:
             N1.append(agent_counts[row][AGENT_1])
             N2.append(agent_counts[row][AGENT_2])
         return N1, N2
-
-    def get_column(self, c):
-        assert Pos(1, c) in self.structure and self.structure[Pos(1, c)] != OBSTACLE, "Column does not exist"
-        return [Pos(r, c) for r in range(1, self.structure.Rmax + 1)]
-
-    def get_last_column(self):
-        return self.get_column(self.structure.Cmax)
-
-    def get_first_column(self):
-        return self.get_column(1)
 
     def agents_at_exit(self):
         """
@@ -481,7 +537,8 @@ class FFCA_wrap:
         global_movement_count = 0
         for old_pos, new_pos in self.positions_map_wrapped.items():
 
-            assert self.structure_wrapped[new_pos] in [AGENT_1, AGENT_2], "Agent has not moved yet, run this function after step :)"
+            assert self.structure_wrapped[new_pos] in [AGENT_1, AGENT_2], \
+                   "Agent has not moved yet, run this function after step :)"
             agent_type = self.structure_wrapped[new_pos]
             if agent_type == AGENT_1:
                 # agent 1 moves 'forward'
@@ -516,61 +573,64 @@ class FFCA_wrap:
 
         return moved_forward
 
+    def show(self, full=False, coords=False):
+        self.print_structure(self.structure, full, coords)
 
-def string_to_ints(str):
-    """
-    Converts a string to a 2d list of integers/floats.
-    str: the string to convert (str)
-    returns: the 2d list of integers/floats (List[List[int]])
-    """
-    return [[MAP[c] for c in row] for row in str.split('\n') if row]
+    @staticmethod
+    def print_structure(grid: Grid, full=False, coords=False) -> None:
+        """
+        Used to print one of the structures of the FFCA. Either structure, or
+        wrapped_structure.
 
+        grid: the grid to print (Grid)
+        full: whether to print the full calculated bounds
+        coords: whether to show coordinate labels
+        """
+        rmin, rmax, cmin, cmax = grid.get_bounds()
+        if full:
+            rmin, rmax, cmin, cmax = grid.calculate_bounds()
 
-def to_corridor(R, C):
-    """
-    Creates a corridor string with the given dimensions.
-    R: the amount of rows of the corridor (int)
-    C: the amount of columns of the corridor (int)
-    returns: the corridor string (str)
-    """
-    s = '#' * (C + 2)
-    s += '\n'
-    for r in range(R):
-        s += 'E'
-        s += '.' * C
-        s += 'E'
-        s += '\n'
+        # Print column indices
+        if coords:
+            print('  ' + ''.join(str(abs(c) % 10) for c in range(cmin - 1, cmax + 2)))
 
-    s += '#' * (C + 2)
+        # Print upper wall
+        upper_wall = '#' * (cmax - cmin + 3)
+        print((f"{str(abs(rmin - 1))} " if coords else "") + upper_wall)
 
-    return string_to_ints(s)
+        for r in range(rmin, rmax + 1):
+            if coords:
+                print(f"{str(abs(r))} ", end="")  # Row index
+            print('E', end='')  # Left boundary
+            for c in range(cmin, cmax + 1):
+                pos = Pos(r, c)
+                val = grid[pos]
+                char = MAP_INT_TO_STRING.get(val, '?')
+                print(char, end='')
+            print('E')  # Right boundary
 
-
-def get_bounds(grid: Grid) -> List[int]:
-    positions = list(grid.keys())
-    r_values = [pos.r for pos in positions]
-    c_values = [pos.c for pos in positions]
-    return [min(r_values), max(r_values), min(c_values), max(c_values)]
-
-
-def print_grid(grid):
-    rmin, rmax, cmin, cmax = get_bounds(grid)
-    for r in range(rmin, rmax + 1):
-        for c in range(cmin, cmax + 1):
-            pos = Pos(r, c)
-            val = grid[pos]
-            char = MAP_TO_STRING.get(val, '?')
-            print(char, end='')
+        # Print bottom wall
+        bottom_wall = '#' * (cmax - cmin + 3)
+        print((f"{str(rmax + 1)} " if coords else "") + bottom_wall)
         print()
-    print()
 
+    @staticmethod
+    def field_string(field: Grid) -> str:
+        """
+        Returns a string representation of a field.
+        field: the field to represent (Grid)
+        returns: the string representation of the field (str)
+        """
+        rmin, rmax, cmin, cmax = field.get_bounds()
+        string = ''
+        for r in range(rmin, rmax + 1):
+            for c in range(cmin, cmax + 1):
+                pos = Pos(r, c)
+                val = field[pos]
+                string += f'{val:.2f} '
+            string += '\n'
+        return string
 
-def print_field(grid: Grid) -> None:
-    rmin, rmax, cmin, cmax = get_bounds(grid)
-    for r in range(rmin, rmax + 1):
-        for c in range(cmin, cmax + 1):
-            pos = Pos(r, c)
-            val = grid[pos]
-            print(f'{val:.2f}', end=' ')
-        print()
-    print()
+    @staticmethod
+    def print_field(grid: Grid, full=False) -> None:
+        print(FFCA_wrap.field_string(grid))
