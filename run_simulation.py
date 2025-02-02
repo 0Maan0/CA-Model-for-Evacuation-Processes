@@ -7,14 +7,11 @@ Description:    This file imports the FFCA class and runs some standard
 scenarios to see the visually see the FFCA interactions.
 """
 from FFCA_wrap import FFCA_wrap
-from FFCA_wrap import print_grid
 from Grid import Grid, Pos
-from metrics import order_parameter, mean_order_parameter, agent_flow, flux, congestion_index
-import time
+from metrics import order_parameter, mean_order_parameter, flux, congestion_index, plot_congestion_flux, plot_congestion_index
 import numpy as np
-from Visualization import visualize_simulation, grid_to_image
+from Visualization import grid_to_image
 import imageio
-import cv2
 import os
 
 def run_density_comparison(cmax, rmax, steps, densities, gif_path, results_path):
@@ -41,14 +38,14 @@ def run_density_comparison(cmax, rmax, steps, densities, gif_path, results_path)
         for _ in range(100):
             ffca = FFCA_wrap(rmax, cmax, Ntot_half, spawn_rate=0.025,
                         conflict_resolution_rate=0, alpha=0.3, delta=0.3,
-                        static_field_strength=2.5, dynamic_field_strength=0,
+                        static_field_strength=2.5, dynamic_field_strength=3,
                         horizontal_bias=5000)
             N1, N2 = ffca.agents_in_row(ffca.structure)
             random_phi_values.append(order_parameter(Ntot, N1, N2))
         phi_zero = np.mean(random_phi_values)
         ffca = FFCA_wrap(rmax, cmax, Ntot_half, spawn_rate=0.025,
                         conflict_resolution_rate=0, alpha=0.3, delta=0.3,
-                        static_field_strength=2.5, dynamic_field_strength=0,
+                        static_field_strength=2.5, dynamic_field_strength=3,
                         horizontal_bias=5000)
         phi_values = np.zeros(steps)
         congestion_indexes = np.zeros(steps)
@@ -83,17 +80,16 @@ def run_density_comparison(cmax, rmax, steps, densities, gif_path, results_path)
         np.savetxt(congestion_index_csv, congestion_indexes, delimiter=",")
         np.savetxt(phi_values_csv, phi_values, delimiter=",")
 
-
-
-
 def main():
-    densities = np.linspace(0.05, 0.43, 15)
+    densities = np.linspace(0.05, 0.43, 5)
     cmax = 50
     rmax = 25
-    steps = 1000
+    steps = 300
     gif_path = "gifs"
     results_path = "simulation_results"
     run_density_comparison(cmax, rmax, steps, densities, gif_path, results_path)
+    plot_congestion_flux(densities, results_path)
+    plot_congestion_index(densities, results_path)
 
 if __name__ == "__main__":
     main()
