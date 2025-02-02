@@ -11,4 +11,5 @@ This repository contains a **Floor Field Cellular Automaton (FFCA)** simulation 
 - **Vizualitation.py** contains the function use to create a gif of the simulation process.
 - **run_FFCA.py** imports the FFCA class and runs the simulation.
 - **run_simulation.py** imports the FFCA class and runs some standard scenarios to see the visually see the FFCA interactions.
-- **Data_Analysis.py** contains the code to run the plopts for data analysis 
+- **Data_Analysis.py** contains the code to run the plopts for data analysis.
+- **requirements.txt** contains the required dependencies for this project.
