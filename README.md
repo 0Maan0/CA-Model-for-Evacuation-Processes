@@ -1,6 +1,12 @@
 # CA-Model-for-Evacuation-Processes
 CA Model for Evacuation Processes for the course Complex System Simulation
 
+### University: University of Amsterdam  
+### Course: Complex Systems Simulation  
+### Authors: Pjotr Piet, Maan Scipio, Sofia Tété 
+### IDs: 12714933, 15899039, 15830608  
+
+
 This repository contains a **Floor Field Cellular Automaton (FFCA)** simulation to analyze pedestrian **lane formation** and **congestion** nunder different conditions. The model evaluates various parameters like density, horizontal bias, and conflict resolution rate to understand emergent crowd behavior.
 
 ## Project Structure
@@ -13,3 +19,14 @@ This repository contains a **Floor Field Cellular Automaton (FFCA)** simulation 
 - **run_simulation.py** imports the FFCA class and runs some standard scenarios to see the visually see the FFCA interactions.
 - **Data_Analysis.py** contains the code to run the plopts for data analysis.
 - **requirements.txt** contains the required dependencies for this project.
+
+## Requirements
+
+To run this project, the following Python libraries are required:
+
+- `numpy`: For numerical computations and array handling.
+- `imageio`: For saving and generating GIFs.
+- `opencv-python`: For image processing tasks.
+- `matplotlib`: For visualizations and plotting metrics.
+
+To install the required dependencies, run the following command in your terminal: pip install -r requirements.txt
