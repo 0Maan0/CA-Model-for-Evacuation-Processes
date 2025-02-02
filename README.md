@@ -20,6 +20,11 @@ This repository contains a **Floor Field Cellular Automaton (FFCA)** simulation 
 - **Data_Analysis.py** contains the code to run the plopts for data analysis.
 - **requirements.txt** contains the required dependencies for this project.
 
+## Folders 
+- **test/** contains the test scripts (test_FFCA_wrap.py, test_grid.py, test_pos.py) and a script to run them all (run_tests.sh).
+- **Presentation/** contains the powerpoint used for the final presentation.
+- **gifs/**, **simulation_results/**, **Figures/** and  **data_analysis/** contain results from the simulations.
+
 ## Requirements
 
 To run this project, the following Python libraries are required:
