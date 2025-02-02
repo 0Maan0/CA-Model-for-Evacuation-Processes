@@ -540,24 +540,28 @@ class FFCA_wrap:
         returns: the global movement direction of the agents (int)
         """
         global_movement_count = 0
-        for old_pos, new_pos in self.positions_map_wrapped.items():
+        for old_pos, new_pos in self.positions_map.items():
 
-            assert self.structure_wrapped[new_pos] in [AGENT_1, AGENT_2], \
+            assert self.structure[new_pos] in [AGENT_1, AGENT_2], \
                    "Agent has not moved yet, run this function after step :)"
-            agent_type = self.structure_wrapped[new_pos]
+            agent_type = self.structure[new_pos]
             if agent_type == AGENT_1:
                 # agent 1 moves 'forward'
-                if new_pos.c > old_pos.c:
+                if new_pos.c > old_pos.c or (new_pos.c == 0 and \
+                   old_pos.c == self.structure.Cmax):
                     global_movement_count += 1
                 # agent 1 moves 'backwards'
-                elif new_pos.c < old_pos.c:
+                elif new_pos.c < old_pos.c or (new_pos.c == self.structure.Cmax and \
+                     old_pos.c == 0):
                     global_movement_count -= 1
             elif agent_type == AGENT_2:
                 # agent 2 movees 'forwards'
-                if new_pos.c < old_pos.c:
+                if new_pos.c < old_pos.c or (new_pos.c == self.structure.Cmax and \
+                   old_pos.c == 0):
                     global_movement_count += 1
                 # agent 2 moves 'backwards'
-                elif new_pos.c > old_pos.c:
+                elif new_pos.c > old_pos.c or (new_pos.c == 0 and \
+                     old_pos.c == self.structure.Cmax):
                     global_movement_count -= 1
 
         return global_movement_count
