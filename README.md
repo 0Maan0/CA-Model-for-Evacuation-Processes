@@ -31,4 +31,4 @@ To run this project, the following Python libraries are required:
 - `pandas`: For handling CSV files and performing data analysis.
 - `cv2`: For additional image resizing and grid visualization if needed.
 
-To install the required dependencies, run the following command in your terminal: pip install -r requirements.txt
+To install the required dependencies, run the following command in your terminal: `pip install -r requirements.txt`.
