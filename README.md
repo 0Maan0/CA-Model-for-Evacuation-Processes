@@ -28,5 +28,7 @@ To run this project, the following Python libraries are required:
 - `imageio`: For saving and generating GIFs.
 - `opencv-python`: For image processing tasks.
 - `matplotlib`: For visualizations and plotting metrics.
+- `pandas`: For handling CSV files and performing data analysis.
+- `cv2`: For additional image resizing and grid visualization if needed.
 
 To install the required dependencies, run the following command in your terminal: pip install -r requirements.txt
