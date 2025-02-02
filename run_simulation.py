@@ -38,14 +38,14 @@ def run_density_comparison(cmax, rmax, steps, densities, gif_path, results_path)
         for _ in range(100):
             ffca = FFCA_wrap(rmax, cmax, Ntot_half, spawn_rate=0.025,
                         conflict_resolution_rate=0, alpha=0.3, delta=0.3,
-                        static_field_strength=2.5, dynamic_field_strength=3,
+                        static_field_strength=2.5, dynamic_field_strength=0,
                         horizontal_bias=5000)
             N1, N2 = ffca.agents_in_row(ffca.structure)
             random_phi_values.append(order_parameter(Ntot, N1, N2))
         phi_zero = np.mean(random_phi_values)
         ffca = FFCA_wrap(rmax, cmax, Ntot_half, spawn_rate=0.025,
                         conflict_resolution_rate=0, alpha=0.3, delta=0.3,
-                        static_field_strength=2.5, dynamic_field_strength=3,
+                        static_field_strength=2.5, dynamic_field_strength=0,
                         horizontal_bias=5000)
         phi_values = np.zeros(steps)
         congestion_indexes = np.zeros(steps)
@@ -81,7 +81,7 @@ def run_density_comparison(cmax, rmax, steps, densities, gif_path, results_path)
         np.savetxt(phi_values_csv, phi_values, delimiter=",")
 
 def main():
-    densities = np.linspace(0.05, 0.43, 5)
+    densities = np.linspace(0.05, 0.9, 5)
     cmax = 50
     rmax = 25
     steps = 300
