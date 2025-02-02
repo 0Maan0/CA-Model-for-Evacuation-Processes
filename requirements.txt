@@ -1,0 +1,20 @@
+# Numerical operations and arrays
+numpy==1.23.0
+
+# For saving/loading images and GIF creation
+imageio==2.23.0
+
+# For computer vision operations (resizing images, etc.)
+opencv-python==4.5.5.64
+
+# For plotting and visualization (if required)
+matplotlib==3.5.1
+
+# Optional: For handling CSV file operations and data analysis
+pandas==1.4.1
+
+# For additional visualization (if needed for debugging or visualizing grid)
+cv2==4.5.5.64
+
+# Time and performance (if you're using it for pauses or performance tracking)
+time==0.0  # This is a built-in Python module, so no need to include it in requirements.txt.
