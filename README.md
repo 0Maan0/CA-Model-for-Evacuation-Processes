@@ -1,10 +1,10 @@
 # CA-Model-for-Evacuation-Processes
 CA Model for Evacuation Processes for the course Complex System Simulation
 
-### University: University of Amsterdam  
-### Course: Complex Systems Simulation  
-### Authors: Pjotr Piet, Maan Scipio, Sofia Tété 
-### IDs: 12714933, 15899039, 15830608  
+University: University of Amsterdam  
+Course: Complex Systems Simulation  
+Authors: Pjotr Piet, Maan Scipio, Sofia Tété 
+IDs: 12714933, 15899039, 15830608  
 
 
 This repository contains a **Floor Field Cellular Automaton (FFCA)** simulation to analyze pedestrian **lane formation** and **congestion** nunder different conditions. The model evaluates various parameters like density, horizontal bias, and conflict resolution rate to understand emergent crowd behavior.
