@@ -573,13 +573,21 @@ class FFCA_wrap:
         returns: the amount of agents that have not moved (int)
         """
         moved_forward = 0
-        for old_pos, new_pos in self.positions_map_wrapped.items():
-            assert new_pos in self.structure_wrapped
+        for old_pos, new_pos in self.positions_map.items():
+
+            assert self.structure[new_pos] in [AGENT_1, AGENT_2], \
+                   "Agent has not moved yet, run this function after step :)"
             agent_type = self.structure[new_pos]
-            if agent_type == AGENT_1 and new_pos.c > old_pos.c:
-                moved_forward += 1
-            elif agent_type == AGENT_2 and new_pos.c < old_pos.c:
-                moved_forward += 1
+            if agent_type == AGENT_1:
+                # agent 1 moves 'forward'
+                if new_pos.c > old_pos.c or (new_pos.c == 0 and \
+                   old_pos.c == self.structure.Cmax):
+                    moved_forward += 1
+            elif agent_type == AGENT_2:
+                # agent 2 movees 'forwards'
+                if new_pos.c < old_pos.c or (new_pos.c == self.structure.Cmax and \
+                   old_pos.c == 0):
+                    moved_forward += 1
 
         return moved_forward
 
