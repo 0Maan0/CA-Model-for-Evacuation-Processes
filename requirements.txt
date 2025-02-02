@@ -15,6 +15,3 @@ pandas==1.4.1
 
 # For additional visualization (if needed for debugging or visualizing grid)
 cv2==4.5.5.64
-
-# Time and performance (if you're using it for pauses or performance tracking)
-time==0.0  # This is a built-in Python module, so no need to include it in requirements.txt.
