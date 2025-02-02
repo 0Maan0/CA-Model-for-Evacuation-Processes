@@ -120,6 +120,9 @@ class FFCA_wrap:
         # positions map to detect movement per iteration
         self.positions_map = None
 
+        self.structure_wrapped = None
+        self.positions_map_wrapped = None
+
     def update_column(self, c, column):
         self.structure.update_column(c, column)
 
@@ -232,7 +235,8 @@ class FFCA_wrap:
         """
         # Step 1: Generate movement probabilities for each agent
         positions_map = self._generate_positions_map()
-        self.positions_map_wrapped = positions_map
+        self.positions_map_wrapped = positions_map.copy()
+        self.structure_wrapped = self.structure.copy()
 
         # step 2: wrap the positions map
         positions_map = self.wrap_positions(positions_map)
@@ -565,8 +569,8 @@ class FFCA_wrap:
         returns: the amount of agents that have not moved (int)
         """
         moved_forward = 0
-        for old_pos, new_pos in self.positions_map.items():
-            assert new_pos in self.structure
+        for old_pos, new_pos in self.positions_map_wrapped.items():
+            assert new_pos in self.structure_wrapped
             agent_type = self.structure[new_pos]
             if agent_type == AGENT_1 and new_pos.c > old_pos.c:
                 moved_forward += 1
